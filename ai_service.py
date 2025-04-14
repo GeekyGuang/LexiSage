@@ -3,6 +3,7 @@ import requests
 import time
 from aqt.utils import showInfo
 from urllib.error import URLError, HTTPError
+from .prompts import DEFAULT_NO_CONTEXT_PROMPT, DEFAULT_WITH_CONTEXT_PROMPT
 
 # OpenAI API调用
 def call_openai_api(prompt, config, system_prompt=None):
@@ -250,25 +251,16 @@ def call_deepseek_api(prompt, config, system_prompt=None):
 
 # 根据配置选择合适的API并生成释义
 def generate_explanation(word, context, config):
-    # 获取系统提示词，根据是否有上下文选择不同的系统提示词
-    default_system_prompt = """你是一位专业的语言学家和教育者，负责解释词语含义。
-请提供准确、清晰、易懂的解释，适合语言学习者。
-在格式上，请使用合理的段落分隔，确保解释有清晰的结构：
-1. 对于不同的含义、用法或例句，请使用换行分隔
-2. 词性、释义、例句等应各占单独的行
-3. 使用适当的缩进和分段使内容易于阅读
-"""
-
     # 根据是否有上下文选择相应的系统提示词
     if context and context.strip():
         # 有上下文时使用有上下文的系统提示词
-        system_prompt = config.get("withContextSystemPrompt", config.get("systemPrompt", default_system_prompt))
+        system_prompt = config.get("withContextSystemPrompt", config.get("systemPrompt", DEFAULT_WITH_CONTEXT_PROMPT))
 
         # 使用固定格式的用户提示词
         user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
     else:
         # 没有上下文时使用无上下文的系统提示词
-        system_prompt = config.get("noContextSystemPrompt", config.get("systemPrompt", default_system_prompt))
+        system_prompt = config.get("noContextSystemPrompt", config.get("systemPrompt", DEFAULT_NO_CONTEXT_PROMPT))
 
         # 使用固定格式的用户提示词
         user_prompt = f"请讲解「{word}」"

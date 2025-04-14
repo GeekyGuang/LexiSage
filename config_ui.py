@@ -1,6 +1,7 @@
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, tooltip
+from .prompts import DEFAULT_NO_CONTEXT_PROMPT, DEFAULT_WITH_CONTEXT_PROMPT
 
 # 笔记类型配置类 - 用于存储单个笔记类型的配置
 class NoteTypeConfig:
@@ -377,17 +378,9 @@ class ConfigDialog(QDialog):
         if not self.config:
             return
 
-        # 默认的系统提示词
-        default_system_prompt = """你是一位专业的语言学家和教育者，负责解释词语含义。
-请提供准确、清晰、易懂的解释，适合语言学习者。
-在格式上，请使用合理的段落分隔，确保解释有清晰的结构：
-1. 对于不同的含义、用法或例句，请使用换行分隔
-2. 词性、释义、例句等应各占单独的行
-3. 使用适当的缩进和分段使内容易于阅读"""
-
         # 加载系统提示词
         # 先加载普通系统提示词，兼容旧版本配置
-        system_prompt = self.config.get("systemPrompt", default_system_prompt)
+        system_prompt = self.config.get("systemPrompt", DEFAULT_NO_CONTEXT_PROMPT)
 
         # 加载无上下文系统提示词
         no_context_system_prompt = self.config.get("noContextSystemPrompt", system_prompt)
@@ -395,6 +388,9 @@ class ConfigDialog(QDialog):
 
         # 加载有上下文系统提示词
         with_context_system_prompt = self.config.get("withContextSystemPrompt", system_prompt)
+        # 如果没有专门设置有上下文提示词，且使用的是默认提示词，则使用DEFAULT_WITH_CONTEXT_PROMPT
+        if with_context_system_prompt == DEFAULT_NO_CONTEXT_PROMPT:
+            with_context_system_prompt = DEFAULT_WITH_CONTEXT_PROMPT
         self.with_context_system_prompt.setPlainText(with_context_system_prompt)
 
         # 加载AI服务设置
