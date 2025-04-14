@@ -129,8 +129,14 @@ class ConfigDialog(QDialog):
         note_type_config_layout.addWidget(self.note_type_settings_group, 1)  # 添加伸展因子，右侧占更多空间
 
         # 自定义提示词
-        prompt_group = QGroupBox("自定义提示词")
+        prompt_group = QGroupBox("自定义提示词（可选）")
         prompt_layout = QVBoxLayout(prompt_group)
+
+        # 说明文本 - 在提示词输入框上方添加说明
+        optional_info = QLabel("以下提示词为可选项，如果不设置则使用插件内置的默认提示词。")
+        optional_info.setStyleSheet("color: #1e88e5; font-size: 12px;")
+        optional_info.setWordWrap(True)
+        prompt_layout.addWidget(optional_info)
 
         # 无上下文系统提示词
         no_context_system_label = QLabel("无上下文系统提示词:")
@@ -152,7 +158,7 @@ class ConfigDialog(QDialog):
         self.with_context_system_prompt.setMinimumHeight(100)
         prompt_layout.addWidget(self.with_context_system_prompt)
 
-        # 说明文本
+        # 底部说明文本
         prompt_info = QLabel("提示：通过不同的系统提示词设置AI的行为方式和风格，{word}会被替换为要解释的词语，{context}会被替换为上下文内容")
         prompt_info.setStyleSheet("color: gray; font-size: 11px;")
         prompt_info.setWordWrap(True)
