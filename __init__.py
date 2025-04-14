@@ -75,22 +75,47 @@ def add_editor_button(buttons, editor):
 def on_generate_explanation(editor):
     config = load_config()
     note = editor.note
+    note_type_name = note.note_type()["name"]
 
-    # 检查是否是配置的笔记类型
-    if note.note_type()["name"] != config["selectedNoteType"]:
-        showInfo("当前笔记类型与配置不符")
+    # 从配置中查找对应笔记类型的设置
+    note_type_configs = config.get("noteTypeConfigs", {})
+
+    # 检查是否有对应笔记类型的配置
+    if note_type_name not in note_type_configs:
+        # 尝试使用旧版配置格式
+        if "selectedNoteType" in config and config["selectedNoteType"] == note_type_name:
+            field_to_explain = config.get("fieldToExplain", "")
+            context_field = config.get("contextField", "")
+            destination_field = config.get("destinationField", "")
+        else:
+            showInfo(f"当前笔记类型 '{note_type_name}' 没有配置，请在设置中添加")
+            return
+    else:
+        # 使用新版配置格式
+        note_type_config = note_type_configs[note_type_name]
+        field_to_explain = note_type_config.get("fieldToExplain", "")
+        context_field = note_type_config.get("contextField", "")
+        destination_field = note_type_config.get("destinationField", "")
+
+    # 检查字段配置
+    if not field_to_explain or not destination_field:
+        showInfo(f"笔记类型 '{note_type_name}' 的配置不完整")
         return
 
     # 获取需要解释的内容
-    word = note[config["fieldToExplain"]]
+    if field_to_explain not in note:
+        showInfo(f"字段 '{field_to_explain}' 不存在于当前笔记")
+        return
+
+    word = note[field_to_explain]
     if not word:
         showInfo("要解释的字段为空")
         return
 
     # 获取上下文内容（如果有）
     context = ""
-    if config["contextField"] and config["contextField"] in note:
-        context = note[config["contextField"]]
+    if context_field and context_field in note:
+        context = note[context_field]
 
     # 生成释义
     explanation = generate_explanation(word, context, config)
@@ -98,7 +123,7 @@ def on_generate_explanation(editor):
         # 将纯文本换行转换为HTML换行标签
         explanation = explanation.replace("\n", "<br>")
         # 更新目标字段
-        note[config["destinationField"]] = explanation
+        note[destination_field] = explanation
         note.flush()
         editor.loadNote()
         showInfo("释义生成成功")
@@ -181,6 +206,18 @@ def on_browser_generate_explanation(browser):
     note_type_mismatch = 0
     empty_field = 0
 
+    # 获取笔记类型配置
+    note_type_configs = config.get("noteTypeConfigs", {})
+    # 兼容旧版配置格式
+    if not note_type_configs and "selectedNoteType" in config:
+        note_type_configs = {
+            config["selectedNoteType"]: {
+                "fieldToExplain": config.get("fieldToExplain", ""),
+                "contextField": config.get("contextField", ""),
+                "destinationField": config.get("destinationField", "")
+            }
+        }
+
     try:
         for i, nid in enumerate(selected_notes):
             if progress.wasCanceled():
@@ -190,21 +227,36 @@ def on_browser_generate_explanation(browser):
             progress.setValue(i)
             progress.setLabelText(f"正在处理 {i+1}/{len(selected_notes)}")
 
-            # 检查笔记类型
-            if note.note_type()["name"] != config["selectedNoteType"]:
+            # 获取笔记类型
+            note_type_name = note.note_type()["name"]
+
+            # 检查笔记类型是否已配置
+            if note_type_name not in note_type_configs:
                 note_type_mismatch += 1
                 continue
 
+            # 获取当前笔记类型的配置
+            note_type_config = note_type_configs[note_type_name]
+            field_to_explain = note_type_config.get("fieldToExplain", "")
+            context_field = note_type_config.get("contextField", "")
+            destination_field = note_type_config.get("destinationField", "")
+
+            # 检查字段配置
+            if not field_to_explain or not destination_field:
+                showInfo(f"笔记类型 '{note_type_name}' 的配置不完整")
+                error_count += 1
+                continue
+
             # 检查源字段是否存在并有内容
-            if config["fieldToExplain"] not in note or not note[config["fieldToExplain"]]:
+            if field_to_explain not in note or not note[field_to_explain]:
                 empty_field += 1
                 continue
 
             # 获取内容和上下文
-            word = note[config["fieldToExplain"]]
+            word = note[field_to_explain]
             context = ""
-            if config["contextField"] and config["contextField"] in note:
-                context = note[config["contextField"]]
+            if context_field and context_field in note:
+                context = note[context_field]
 
             # 生成释义
             explanation = generate_explanation(word, context, config)
@@ -212,7 +264,7 @@ def on_browser_generate_explanation(browser):
                 # 将纯文本换行转换为HTML换行标签
                 explanation = explanation.replace("\n", "<br>")
                 # 更新目标字段
-                note[config["destinationField"]] = explanation
+                note[destination_field] = explanation
                 note.flush()
                 success_count += 1
                 # 避免API请求过于频繁
@@ -231,7 +283,7 @@ def on_browser_generate_explanation(browser):
 处理结果:
 - 成功: {success_count}
 - 失败: {error_count}
-- 笔记类型不匹配: {note_type_mismatch}
+- 笔记类型未配置: {note_type_mismatch}
 - 源字段为空: {empty_field}
 """
     showInfo(result_msg)

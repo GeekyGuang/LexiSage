@@ -2,6 +2,14 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, tooltip
 
+# 笔记类型配置类 - 用于存储单个笔记类型的配置
+class NoteTypeConfig:
+    def __init__(self, note_type="", field_to_explain="", context_field="", destination_field=""):
+        self.note_type = note_type
+        self.field_to_explain = field_to_explain
+        self.context_field = context_field
+        self.destination_field = destination_field
+
 # 配置对话框
 class ConfigDialog(QDialog):
     def __init__(self, parent):
@@ -11,11 +19,40 @@ class ConfigDialog(QDialog):
         self.config = mw.addonManager.getConfig("anki_lexisage")
         if not self.config:
             self.config = {}
+
+        # 初始化笔记类型配置列表
+        self.note_type_configs = []
+        self.load_note_type_configs()
+
         self.setupUI()
+
+    def load_note_type_configs(self):
+        # 兼容旧版配置格式
+        if "noteTypeConfigs" in self.config:
+            # 新格式：多笔记类型配置
+            configs = self.config.get("noteTypeConfigs", {})
+            for note_type, config_data in configs.items():
+                self.note_type_configs.append(NoteTypeConfig(
+                    note_type=note_type,
+                    field_to_explain=config_data.get("fieldToExplain", ""),
+                    context_field=config_data.get("contextField", ""),
+                    destination_field=config_data.get("destinationField", "")
+                ))
+        elif "selectedNoteType" in self.config:
+            # 旧格式：单笔记类型配置
+            note_type = self.config.get("selectedNoteType", "")
+            if note_type:
+                self.note_type_configs.append(NoteTypeConfig(
+                    note_type=note_type,
+                    field_to_explain=self.config.get("fieldToExplain", ""),
+                    context_field=self.config.get("contextField", ""),
+                    destination_field=self.config.get("destinationField", "")
+                ))
 
     def setupUI(self):
         self.setWindowTitle("LexiSage设置")
-        self.setMinimumWidth(500)
+        self.setMinimumWidth(600)
+        self.setMinimumHeight(500)
 
         layout = QVBoxLayout(self)
 
@@ -28,13 +65,50 @@ class ConfigDialog(QDialog):
         basic_layout = QVBoxLayout(basic_tab)
         tabs.addTab(basic_tab, "基本设置")
 
-        # 笔记类型选择
-        note_type_group = QGroupBox("笔记类型设置")
-        note_type_layout = QFormLayout(note_type_group)
+        # 使用水平布局组合笔记类型配置区域和设置区域
+        note_type_config_layout = QHBoxLayout()
+        basic_layout.addLayout(note_type_config_layout)
 
+        # 笔记类型配置区域（左侧）
+        note_configs_group = QGroupBox("笔记类型列表")
+        note_configs_layout = QVBoxLayout(note_configs_group)
+        note_configs_group.setMaximumWidth(200)  # 限制宽度
+
+        # 添加笔记类型列表
+        self.note_configs_list = QListWidget()
+        self.note_configs_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.note_configs_list.itemSelectionChanged.connect(self.on_note_config_selected)
+        note_configs_layout.addWidget(self.note_configs_list)
+
+        # 按钮区域
+        buttons_layout = QHBoxLayout()
+        self.add_config_btn = QPushButton("+")
+        self.add_config_btn.setToolTip("添加配置")
+        self.add_config_btn.setMaximumWidth(30)
+        self.add_config_btn.clicked.connect(self.add_note_type_config)
+
+        self.remove_config_btn = QPushButton("-")
+        self.remove_config_btn.setToolTip("删除配置")
+        self.remove_config_btn.setMaximumWidth(30)
+        self.remove_config_btn.clicked.connect(self.remove_note_type_config)
+        self.remove_config_btn.setEnabled(False)  # 初始禁用
+
+        buttons_layout.addWidget(self.add_config_btn)
+        buttons_layout.addWidget(self.remove_config_btn)
+        buttons_layout.addStretch(1)
+        note_configs_layout.addLayout(buttons_layout)
+
+        note_type_config_layout.addWidget(note_configs_group)
+
+        # 笔记类型设置区域（右侧）
+        self.note_type_settings_group = QGroupBox("笔记类型设置")
+        self.note_type_settings_group.setEnabled(False)  # 初始禁用
+        note_type_layout = QFormLayout(self.note_type_settings_group)
+
+        # 笔记类型选择
         self.note_type_combo = QComboBox()
         self.populate_note_types()
-        note_type_layout.addRow("选择笔记类型:", self.note_type_combo)
+        note_type_layout.addRow("笔记类型:", self.note_type_combo)
 
         # 字段选择区域
         self.field_to_explain_combo = QComboBox()
@@ -46,19 +120,24 @@ class ConfigDialog(QDialog):
         note_type_layout.addRow("上下文字段(可选):", self.context_field_combo)
         note_type_layout.addRow("释义目标字段:", self.destination_field_combo)
 
-        basic_layout.addWidget(note_type_group)
+        # 保存按钮
+        self.save_config_btn = QPushButton("保存配置")
+        self.save_config_btn.clicked.connect(self.save_current_note_type_config)
+        note_type_layout.addRow("", self.save_config_btn)
 
-        # 自定义提示词 - 只保留系统提示词部分
+        note_type_config_layout.addWidget(self.note_type_settings_group, 1)  # 添加伸展因子，右侧占更多空间
+
+        # 自定义提示词
         prompt_group = QGroupBox("自定义提示词")
         prompt_layout = QVBoxLayout(prompt_group)
 
-        # 系统提示词 - 去掉标签
+        # 系统提示词
         self.system_prompt_edit = QPlainTextEdit()
         self.system_prompt_edit.setPlaceholderText("给AI的指令，设置AI的行为、角色和约束")
         self.system_prompt_edit.setMinimumHeight(100)
         prompt_layout.addWidget(self.system_prompt_edit)
 
-        # 说明文本 - 不再提及用户提示词
+        # 说明文本
         prompt_info = QLabel("提示：在这里设置AI的行为方式和风格，以控制生成结果的语气和格式")
         prompt_info.setStyleSheet("color: gray; font-size: 11px;")
         prompt_info.setWordWrap(True)
@@ -160,7 +239,10 @@ class ConfigDialog(QDialog):
         # 连接信号
         self.note_type_combo.currentIndexChanged.connect(self.on_note_type_changed)
 
-        # 加载现有配置
+        # 刷新笔记类型列表
+        self.refresh_note_configs_list()
+
+        # 加载AI服务和系统提示词配置
         self.load_config()
 
     def populate_note_types(self):
@@ -186,41 +268,102 @@ class ConfigDialog(QDialog):
                     self.context_field_combo.addItem(field_name)
                     self.destination_field_combo.addItem(field_name)
 
-    def load_config(self):
-        if not self.config:
-            return
+    def refresh_note_configs_list(self):
+        self.note_configs_list.clear()
+        for config in self.note_type_configs:
+            item = QListWidgetItem(config.note_type)
+            item.setData(Qt.ItemDataRole.UserRole, config)
+            self.note_configs_list.addItem(item)
 
-        # 加载笔记类型和字段设置
-        note_type = self.config.get("selectedNoteType", "")
-        if note_type:
-            index = self.note_type_combo.findText(note_type)
+    def on_note_config_selected(self):
+        items = self.note_configs_list.selectedItems()
+        if items:
+            self.note_type_settings_group.setEnabled(True)
+            self.remove_config_btn.setEnabled(True)
+
+            # 获取选中的配置
+            config = items[0].data(Qt.ItemDataRole.UserRole)
+
+            # 设置笔记类型
+            index = self.note_type_combo.findText(config.note_type)
             if index >= 0:
                 self.note_type_combo.setCurrentIndex(index)
                 self.on_note_type_changed(index)
 
-                # 设置字段选择
-                field_to_explain = self.config.get("fieldToExplain", "")
-                context_field = self.config.get("contextField", "")
-                destination_field = self.config.get("destinationField", "")
-
-                if field_to_explain:
-                    index = self.field_to_explain_combo.findText(field_to_explain)
+                # 设置字段
+                if config.field_to_explain:
+                    index = self.field_to_explain_combo.findText(config.field_to_explain)
                     if index >= 0:
                         self.field_to_explain_combo.setCurrentIndex(index)
 
-                if context_field:
-                    index = self.context_field_combo.findText(context_field)
+                if config.context_field:
+                    index = self.context_field_combo.findText(config.context_field)
                     if index >= 0:
                         self.context_field_combo.setCurrentIndex(index)
                 else:
                     self.context_field_combo.setCurrentIndex(0)  # "无"
 
-                if destination_field:
-                    index = self.destination_field_combo.findText(destination_field)
+                if config.destination_field:
+                    index = self.destination_field_combo.findText(config.destination_field)
                     if index >= 0:
                         self.destination_field_combo.setCurrentIndex(index)
+        else:
+            self.note_type_settings_group.setEnabled(False)
+            self.remove_config_btn.setEnabled(False)
 
-        # 加载提示词
+    def add_note_type_config(self):
+        # 创建新配置
+        config = NoteTypeConfig()
+
+        # 如果有笔记类型可选，默认选择第一个
+        if self.note_type_combo.count() > 0:
+            config.note_type = self.note_type_combo.itemText(0)
+
+        # 添加到配置列表
+        self.note_type_configs.append(config)
+
+        # 刷新列表并选中新添加的项
+        self.refresh_note_configs_list()
+        self.note_configs_list.setCurrentRow(self.note_configs_list.count() - 1)
+
+    def remove_note_type_config(self):
+        items = self.note_configs_list.selectedItems()
+        if items:
+            # 获取选中的行
+            row = self.note_configs_list.row(items[0])
+
+            # 从配置列表中移除
+            del self.note_type_configs[row]
+
+            # 刷新列表
+            self.refresh_note_configs_list()
+
+            # 如果还有配置，选中第一个
+            if self.note_configs_list.count() > 0:
+                self.note_configs_list.setCurrentRow(0)
+
+    def save_current_note_type_config(self):
+        items = self.note_configs_list.selectedItems()
+        if items:
+            # 获取当前选中的配置
+            config = items[0].data(Qt.ItemDataRole.UserRole)
+
+            # 更新配置
+            config.note_type = self.note_type_combo.currentText()
+            config.field_to_explain = self.field_to_explain_combo.currentText()
+            config.context_field = self.context_field_combo.currentText() if self.context_field_combo.currentIndex() > 0 else ""
+            config.destination_field = self.destination_field_combo.currentText()
+
+            # 刷新显示
+            items[0].setText(config.note_type)
+
+            tooltip("笔记类型配置已保存")
+
+    def load_config(self):
+        if not self.config:
+            return
+
+        # 加载系统提示词
         system_prompt = self.config.get("systemPrompt", "请解释词语或短语「{word}」的意思。{context}")
         self.system_prompt_edit.setPlainText(system_prompt)
 
@@ -255,19 +398,20 @@ class ConfigDialog(QDialog):
         self.deepseek_model.setText(deepseek_config.get("model", ""))
 
     def save_config(self):
-        note_type = self.note_type_combo.currentText()
-        field_to_explain = self.field_to_explain_combo.currentText()
-        context_field = self.context_field_combo.currentText() if self.context_field_combo.currentIndex() > 0 else ""
-        destination_field = self.destination_field_combo.currentText()
-
         ai_service_index = self.ai_service_combo.currentIndex()
         ai_service = ["openai", "xai", "deepseek"][ai_service_index]
 
+        # 转换为新的配置格式
+        note_type_configs = {}
+        for config in self.note_type_configs:
+            note_type_configs[config.note_type] = {
+                "fieldToExplain": config.field_to_explain,
+                "contextField": config.context_field,
+                "destinationField": config.destination_field
+            }
+
         # 更新配置
-        self.config["selectedNoteType"] = note_type
-        self.config["fieldToExplain"] = field_to_explain
-        self.config["contextField"] = context_field
-        self.config["destinationField"] = destination_field
+        self.config["noteTypeConfigs"] = note_type_configs
         self.config["aiService"] = ai_service
         self.config["systemPrompt"] = self.system_prompt_edit.toPlainText()
 
@@ -294,19 +438,21 @@ class ConfigDialog(QDialog):
         mw.addonManager.writeConfig("anki_lexisage", self.config)
 
     def accept(self):
-        # 确认所有必填字段已填写
-        if not self.field_to_explain_combo.currentText():
-            showInfo("请选择要解释的字段")
+        # 检查是否至少有一个笔记类型配置
+        if not self.note_type_configs:
+            showInfo("请至少添加一个笔记类型配置")
             return
 
-        if not self.destination_field_combo.currentText():
-            showInfo("请选择释义目标字段")
-            return
+        # 检查每个笔记类型配置是否完整
+        for config in self.note_type_configs:
+            if not config.field_to_explain or not config.destination_field:
+                showInfo(f"笔记类型 '{config.note_type}' 的配置不完整，请确保已设置要解释的字段和释义目标字段")
+                return
 
+        # 检查API配置
         ai_service_index = self.ai_service_combo.currentIndex()
         ai_service = ["openai", "xai", "deepseek"][ai_service_index]
 
-        # 检查API配置
         if ai_service == "openai":
             if not self.openai_apikey.text():
                 showInfo("请输入OpenAI API密钥")
