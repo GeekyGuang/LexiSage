@@ -1,0 +1,54 @@
+# Python常见忽略项
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Anki相关忽略项
+meta.json
+user_files/
+*.ankiaddon
+
+# 虚拟环境
+venv/
+ENV/
+.env/
+.venv/
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 个人配置文件（可能包含API密钥）
+config.json
+*apikey*
+*secret*
+
+# 日志与临时文件
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.coverage.*
+coverage.xml
+*.cover

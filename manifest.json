@@ -1,0 +1,10 @@
+{
+    "name": "LexiSage",
+    "package": "anki_lexisage",
+    "ankiweb_id": "",
+    "author": "YourName",
+    "version": "0.1.0",
+    "homepage": "",
+    "conflicts": [],
+    "mod": 0
+}
