@@ -132,7 +132,7 @@ class ConfigDialog(QDialog):
         prompt_group = QGroupBox("自定义提示词（可选）")
         prompt_layout = QVBoxLayout(prompt_group)
 
-        # 说明文本 - 在提示词输入框上方添加说明
+        # 说明文本
         optional_info = QLabel("以下提示词为可选项，如果不设置则使用插件内置的默认提示词。")
         optional_info.setStyleSheet("color: #1e88e5; font-size: 12px;")
         optional_info.setWordWrap(True)
@@ -451,7 +451,7 @@ class ConfigDialog(QDialog):
         self.config["withContextSystemPrompt"] = self.with_context_system_prompt.toPlainText()
 
         # 保留原始systemPrompt字段以便向后兼容
-        self.config["systemPrompt"] = self.no_context_system_prompt.toPlainText()
+        self.config["systemPrompt"] = self.config["noContextSystemPrompt"]
 
         # API配置
         self.config["apiConfig"] = {

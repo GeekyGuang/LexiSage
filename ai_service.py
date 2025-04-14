@@ -254,13 +254,19 @@ def generate_explanation(word, context, config):
     # 根据是否有上下文选择相应的系统提示词
     if context and context.strip():
         # 有上下文时使用有上下文的系统提示词
-        system_prompt = config.get("withContextSystemPrompt", config.get("systemPrompt", DEFAULT_WITH_CONTEXT_PROMPT))
+        system_prompt = config.get("withContextSystemPrompt")
+        # 如果配置中没有或为空，使用默认提示词
+        if not system_prompt or not system_prompt.strip():
+            system_prompt = DEFAULT_WITH_CONTEXT_PROMPT
 
         # 使用固定格式的用户提示词
         user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
     else:
         # 没有上下文时使用无上下文的系统提示词
-        system_prompt = config.get("noContextSystemPrompt", config.get("systemPrompt", DEFAULT_NO_CONTEXT_PROMPT))
+        system_prompt = config.get("noContextSystemPrompt")
+        # 如果配置中没有或为空，使用默认提示词
+        if not system_prompt or not system_prompt.strip():
+            system_prompt = DEFAULT_NO_CONTEXT_PROMPT
 
         # 使用固定格式的用户提示词
         user_prompt = f"请讲解「{word}」"

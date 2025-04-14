@@ -11,13 +11,14 @@ LexiSage是一款为Anki设计的智能释义插件，支持调用多种AI接口
 - 支持根据上下文解释单词
 - 批量处理功能，提高学习效率
 - 可自定义系统提示词
+- 支持多笔记类型配置
 
 ## 安装说明
 
 ### 方法1：通过AnkiWeb（推荐）
 1. 在Anki中，点击"工具">"插件"
 2. 点击"获取插件"
-3. 输入插件代码：`[您的AnkiWeb插件ID]`
+3. 输入插件代码：`[发布后填写AnkiWeb插件ID]`
 4. 重启Anki
 
 ### 方法2：手动安装
@@ -34,7 +35,7 @@ LexiSage是一款为Anki设计的智能释义插件，支持调用多种AI接口
 ### 基本配置
 1. 打开Anki，在工具菜单中选择"LexiSage 设置..."
 2. 在"基本设置"选项卡中：
-   - 选择需要处理的笔记类型
+   - 添加需要处理的笔记类型配置
    - 选择要解释的字段
    - 选择上下文字段（可选）
    - 选择释义目标字段
@@ -58,10 +59,20 @@ LexiSage是一款为Anki设计的智能释义插件，支持调用多种AI接口
 - `__init__.py`: 插件入口点和主要功能
 - `config_ui.py`: 配置UI界面
 - `ai_service.py`: AI服务调用接口
+- `prompts.py`: 默认提示词模板
 
-### 构建与测试
-1. 修改代码后，复制到Anki插件目录进行测试
-2. 使用`addon-builder`（如果使用）打包发布版本
+### 打包插件
+1. 确保项目结构正确
+2. 创建`manifest.json`和`ankiweb.json`文件
+3. 使用zip打包，确保不包含`.git`、`__pycache__`等非必要文件
+4. 可以使用以下命令打包：`zip -r anki_lexisage.ankiaddon * -x ".*" "__pycache__/*" "*.pyc"`
+
+### 提交到AnkiWeb
+1. 注册[AnkiWeb账户](https://ankiweb.net/account/register)
+2. 登录后，访问[共享页面](https://ankiweb.net/shared/info/)
+3. 点击"Upload Add-on"提交你的插件
+4. 填写插件信息并上传打包好的文件
+5. 等待审核通过
 
 ## 贡献指南
 欢迎贡献代码、报告问题或提出新功能建议！
