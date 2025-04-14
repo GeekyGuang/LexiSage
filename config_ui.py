@@ -131,14 +131,28 @@ class ConfigDialog(QDialog):
         prompt_group = QGroupBox("自定义提示词")
         prompt_layout = QVBoxLayout(prompt_group)
 
-        # 系统提示词
-        self.system_prompt_edit = QPlainTextEdit()
-        self.system_prompt_edit.setPlaceholderText("给AI的指令，设置AI的行为、角色和约束")
-        self.system_prompt_edit.setMinimumHeight(100)
-        prompt_layout.addWidget(self.system_prompt_edit)
+        # 无上下文系统提示词
+        no_context_system_label = QLabel("无上下文系统提示词:")
+        no_context_system_label.setToolTip("当笔记没有上下文字段或上下文为空时使用的系统提示词")
+        prompt_layout.addWidget(no_context_system_label)
+
+        self.no_context_system_prompt = QPlainTextEdit()
+        self.no_context_system_prompt.setPlaceholderText("无上下文时给AI的指令，设置AI的行为、角色和约束")
+        self.no_context_system_prompt.setMinimumHeight(100)
+        prompt_layout.addWidget(self.no_context_system_prompt)
+
+        # 有上下文系统提示词
+        with_context_system_label = QLabel("有上下文系统提示词:")
+        with_context_system_label.setToolTip("当笔记有上下文字段且内容不为空时使用的系统提示词")
+        prompt_layout.addWidget(with_context_system_label)
+
+        self.with_context_system_prompt = QPlainTextEdit()
+        self.with_context_system_prompt.setPlaceholderText("有上下文时给AI的指令，设置AI的行为、角色和约束")
+        self.with_context_system_prompt.setMinimumHeight(100)
+        prompt_layout.addWidget(self.with_context_system_prompt)
 
         # 说明文本
-        prompt_info = QLabel("提示：在这里设置AI的行为方式和风格，以控制生成结果的语气和格式")
+        prompt_info = QLabel("提示：通过不同的系统提示词设置AI的行为方式和风格，{word}会被替换为要解释的词语，{context}会被替换为上下文内容")
         prompt_info.setStyleSheet("color: gray; font-size: 11px;")
         prompt_info.setWordWrap(True)
         prompt_layout.addWidget(prompt_info)
@@ -363,9 +377,25 @@ class ConfigDialog(QDialog):
         if not self.config:
             return
 
+        # 默认的系统提示词
+        default_system_prompt = """你是一位专业的语言学家和教育者，负责解释词语含义。
+请提供准确、清晰、易懂的解释，适合语言学习者。
+在格式上，请使用合理的段落分隔，确保解释有清晰的结构：
+1. 对于不同的含义、用法或例句，请使用换行分隔
+2. 词性、释义、例句等应各占单独的行
+3. 使用适当的缩进和分段使内容易于阅读"""
+
         # 加载系统提示词
-        system_prompt = self.config.get("systemPrompt", "请解释词语或短语「{word}」的意思。{context}")
-        self.system_prompt_edit.setPlainText(system_prompt)
+        # 先加载普通系统提示词，兼容旧版本配置
+        system_prompt = self.config.get("systemPrompt", default_system_prompt)
+
+        # 加载无上下文系统提示词
+        no_context_system_prompt = self.config.get("noContextSystemPrompt", system_prompt)
+        self.no_context_system_prompt.setPlainText(no_context_system_prompt)
+
+        # 加载有上下文系统提示词
+        with_context_system_prompt = self.config.get("withContextSystemPrompt", system_prompt)
+        self.with_context_system_prompt.setPlainText(with_context_system_prompt)
 
         # 加载AI服务设置
         ai_service = self.config.get("aiService", "openai").lower()
@@ -413,7 +443,13 @@ class ConfigDialog(QDialog):
         # 更新配置
         self.config["noteTypeConfigs"] = note_type_configs
         self.config["aiService"] = ai_service
-        self.config["systemPrompt"] = self.system_prompt_edit.toPlainText()
+
+        # 保存系统提示词
+        self.config["noContextSystemPrompt"] = self.no_context_system_prompt.toPlainText()
+        self.config["withContextSystemPrompt"] = self.with_context_system_prompt.toPlainText()
+
+        # 保留原始systemPrompt字段以便向后兼容
+        self.config["systemPrompt"] = self.no_context_system_prompt.toPlainText()
 
         # API配置
         self.config["apiConfig"] = {

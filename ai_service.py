@@ -250,7 +250,7 @@ def call_deepseek_api(prompt, config, system_prompt=None):
 
 # 根据配置选择合适的API并生成释义
 def generate_explanation(word, context, config):
-    # 获取系统提示词
+    # 获取系统提示词，根据是否有上下文选择不同的系统提示词
     default_system_prompt = """你是一位专业的语言学家和教育者，负责解释词语含义。
 请提供准确、清晰、易懂的解释，适合语言学习者。
 在格式上，请使用合理的段落分隔，确保解释有清晰的结构：
@@ -258,14 +258,19 @@ def generate_explanation(word, context, config):
 2. 词性、释义、例句等应各占单独的行
 3. 使用适当的缩进和分段使内容易于阅读
 """
-    system_prompt = config.get("systemPrompt", default_system_prompt)
 
-    # 使用固定格式的用户提示词，根据是否有上下文选择不同格式
+    # 根据是否有上下文选择相应的系统提示词
     if context and context.strip():
-        # 有上下文时的提示词格式
+        # 有上下文时使用有上下文的系统提示词
+        system_prompt = config.get("withContextSystemPrompt", config.get("systemPrompt", default_system_prompt))
+
+        # 使用固定格式的用户提示词
         user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
     else:
-        # 没有上下文时的提示词格式
+        # 没有上下文时使用无上下文的系统提示词
+        system_prompt = config.get("noContextSystemPrompt", config.get("systemPrompt", default_system_prompt))
+
+        # 使用固定格式的用户提示词
         user_prompt = f"请讲解「{word}」"
 
     # 根据配置选择AI服务
