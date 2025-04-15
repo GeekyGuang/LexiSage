@@ -62,10 +62,34 @@ LexiSage是一款为Anki设计的智能释义插件，支持调用多种AI接口
 - `prompts.py`: 默认提示词模板
 
 ### 打包插件
-1. 确保项目结构正确
-2. 创建`manifest.json`和`ankiweb.json`文件
-3. 使用zip打包，确保不包含`.git`、`__pycache__`等非必要文件
-4. 可以使用以下命令打包：`zip -r anki_lexisage.ankiaddon * -x ".*" "__pycache__/*" "*.pyc"`
+1. 确保项目包含以下必要文件:
+   - `__init__.py`: 插件入口点
+   - `ai_service.py`: AI服务接口
+   - `config_ui.py`: 配置界面
+   - `prompts.py`: 默认提示词
+   - `manifest.json`: 插件元数据，包含名称、版本等信息
+   - `meta.json`: Anki版本兼容性信息(重要，决定支持的Anki版本)
+   - `config.json`: 默认配置(可选)
+   - `LICENSE`: 许可证文件
+
+2. 更新版本号:
+   - 在`manifest.json`文件中更新`version`字段
+   - 在`ankiweb.json`文件中同步更新版本号(用于提交到AnkiWeb)
+
+3. 使用以下命令打包:
+   ```bash
+   zip -r anki_lexisage.ankiaddon __init__.py ai_service.py config_ui.py prompts.py manifest.json meta.json LICENSE config.json -x ".*" "__pycache__/*" "*.pyc"
+   ```
+
+4. 验证打包内容:
+   ```bash
+   unzip -l anki_lexisage.ankiaddon
+   ```
+   确保只包含必要文件，没有多余的`.git`、`__pycache__`等文件
+
+5. 测试安装:
+   - 在测试环境中通过Anki的"从文件安装插件"功能安装`.ankiaddon`文件
+   - 验证插件功能是否正常运行
 
 ### 提交到AnkiWeb
 1. 注册[AnkiWeb账户](https://ankiweb.net/account/register)

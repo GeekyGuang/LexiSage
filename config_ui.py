@@ -214,10 +214,12 @@ class ConfigDialog(QDialog):
         xai_layout = QFormLayout(xai_widget)
         self.xai_baseurl = QLineEdit()
         self.xai_baseurl.setMinimumWidth(300)  # 设置最小宽度
+        self.xai_baseurl.setText("https://api.x.ai/v1/chat/completions")  # 默认填写
         self.xai_apikey = QLineEdit()
         self.xai_apikey.setMinimumWidth(300)  # 设置最小宽度
         self.xai_model = QLineEdit()
         self.xai_model.setMinimumWidth(300)  # 设置最小宽度
+        self.xai_model.setText("grok-2-latest")  # 默认填写模型
 
         # 添加XAI URL格式提示
         xai_url_hint = QLabel("填写完整URL，例如: https://api.x.ai/v1/chat/completions")
@@ -419,9 +421,9 @@ class ConfigDialog(QDialog):
 
         # XAI
         xai_config = api_config.get("xai", {})
-        self.xai_baseurl.setText(xai_config.get("baseUrl", ""))
+        self.xai_baseurl.setText(xai_config.get("baseUrl", "https://api.x.ai/v1/chat/completions"))
         self.xai_apikey.setText(xai_config.get("apiKey", ""))
-        self.xai_model.setText(xai_config.get("model", ""))
+        self.xai_model.setText(xai_config.get("model", "grok-2-latest"))
 
         # DeepSeek
         deepseek_config = api_config.get("deepseek", {})
