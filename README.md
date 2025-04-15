@@ -6,12 +6,12 @@
 [LexiSage](https://ankiweb.net/shared/info/750479332?cb=1744698675805)是一款为Anki设计的智能释义插件，支持调用多种AI接口（OpenAI、XAI、DeepSeek）对选定字段进行解释，特别适合语言学习者。
 
 ### 主要功能
-- 支持多种AI服务（OpenAI、XAI、DeepSeek）
 - 自动解析词语含义和用法
 - 支持根据上下文解释单词
 - 批量处理功能，提高学习效率
 - 可自定义系统提示词
 - 支持多笔记类型配置
+- 支持多种AI服务，需自备 API Key
 
 ## 安装说明
 
