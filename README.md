@@ -2,8 +2,6 @@
 
 > LexiSage – Let your cards speak with clarity and wisdom.
 
-<img src="screenshot.png" alt="LexiSage截图" width="600"/>
-
 ## 项目简介
 LexiSage是一款为Anki设计的智能释义插件，支持调用多种AI接口（OpenAI、XAI、DeepSeek）对选定字段进行解释，特别适合语言学习者。
 
