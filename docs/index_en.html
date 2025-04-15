@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LexiSage - AI Definition Generator for Anki</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <meta name="description" content="LexiSage is an intelligent definition plugin designed for Anki that supports multiple AI interfaces to generate explanations for selected fields.">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>LexiSage - AI Definition Generator for Anki</h1>
+      <p class="subtitle">Let your cards speak with clarity and wisdom.</p>
+      <div class="language-switcher">
+        <a href="index.html">中文</a> |
+        <a href="index_en.html" class="active">English</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="intro">
+        <h2>Project Overview</h2>
+        <p><a href="https://ankiweb.net/shared/info/750479332?cb=1744698675805" target="_blank">LexiSage</a> is an intelligent definition plugin designed for Anki that supports multiple AI interfaces (OpenAI, XAI, DeepSeek) to generate explanations for selected fields. It's especially useful for language learners.</p>
+
+        <h3>Key Features</h3>
+        <ul>
+          <li>Automatic parsing of word meanings and usage</li>
+          <li>Context-based word explanations</li>
+          <li>Batch processing to improve study efficiency</li>
+          <li>Support for various AI services (requires your own API Keys)</li>
+        </ul>
+      </section>
+
+      <section id="installation">
+        <h2>Installation</h2>
+        <ol>
+          <li>In Anki, click "Tools" > "Add-ons"</li>
+          <li>Click "Get Add-ons"</li>
+          <li>Enter the add-on code: <strong>750479332</strong></li>
+          <li>Restart Anki</li>
+        </ol>
+        <a href="https://ankiweb.net/shared/info/750479332" class="btn download-btn">Download from Anki Add-ons</a>
+      </section>
+
+      <section id="usage">
+        <h2>Usage Instructions</h2>
+
+        <h3>Basic Configuration</h3>
+        <ol>
+          <li>Open Anki, select "LexiSage Settings..." from the "Tools" menu</li>
+          <li>
+            <p>Set up AI services. The plugin doesn't provide AI services itself, so you need to purchase API Keys from AI service providers and enter them into the plugin. After obtaining an API Key, select the corresponding service provider and fill in the correct API Key and the model you want to use.</p>
+            <p>Recommended AI service providers:</p>
+            <ul>
+              <li><a href="https://console.x.ai" target="_blank">xAI</a> (Great value: $5 monthly charge gives you $150 credit)</li>
+              <li><a href="https://platform.deepseek.com" target="_blank">DeepSeek</a> (Leading Chinese AI platform)</li>
+            </ul>
+            <div class="img-container">
+              <img src="https://github.com/user-attachments/assets/1d33d54d-ca04-4507-83bd-84267557fb0a" alt="AI Service Configuration Screenshot" class="screenshot">
+            </div>
+          </li>
+          <li>
+            <p>Add configuration for your note types, specify which template fields the AI should explain, designate output result fields, and optionally add context for more accurate definitions.</p>
+            <div class="img-container">
+              <img src="https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49" alt="Note Type Configuration Screenshot" class="screenshot">
+            </div>
+            <ul>
+              <li>Click the + button to add note type configuration</li>
+              <li>Select the field to explain</li>
+              <li>Select context field (optional)</li>
+              <li>Select destination field for definitions</li>
+              <li>Save configuration</li>
+            </ul>
+            <p>(This plugin supports configuring multiple note types, allowing batch processing of different note types simultaneously)</p>
+          </li>
+        </ol>
+
+        <h3>Generating Definitions</h3>
+        <ol>
+          <li>Browse your card collection</li>
+          <li>Select the cards for which you want to generate definitions</li>
+          <li>Click "LexiSage" > "Generate Batch Definitions" in the menu bar, then wait for completion</li>
+        </ol>
+        <div class="img-container">
+          <img src="https://github.com/user-attachments/assets/6ebbb32e-e9a9-4f84-96d1-cc05041e3b8c" alt="Batch Generation Screenshot" class="screenshot">
+        </div>
+
+        <h3>Custom Prompts</h3>
+        <p>The plugin includes built-in prompts, but if you're not satisfied with the definition results, you can customize the prompts in "LexiSage Settings"</p>
+      </section>
+
+      <section id="development">
+        <h2>Developer Guide</h2>
+        <p>If you want to understand the project structure, build process, or want to contribute, please check our <a href="https://github.com/GeekyGuang/LexiSage/blob/main/DEVELOPMENT_EN.md" target="_blank">Development Guide</a>.</p>
+      </section>
+
+      <section id="license">
+        <h2>License</h2>
+        <p>This project is licensed under the <a href="https://github.com/GeekyGuang/LexiSage/blob/main/LICENSE" target="_blank">GNU General Public License v3.0 (GPL-3.0)</a> - see the LICENSE file for details.</p>
+      </section>
+
+      <section id="acknowledgements">
+        <h2>Acknowledgements</h2>
+        <ul>
+          <li>Thanks to all contributors and users</li>
+          <li>Special thanks to the Anki development team for providing an excellent platform</li>
+        </ul>
+      </section>
+
+      <section id="privacy">
+        <h2>Privacy Statement</h2>
+        <p>This plugin sends your card content to the AI service you configure, so please ensure you understand the relevant privacy policies. API keys are stored only in local configuration files and are not uploaded.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2024 LexiSage | <a href="https://github.com/GeekyGuang/LexiSage" target="_blank">GitHub Repository</a></p>
+    </footer>
+  </div>
+</body>
+</html>
