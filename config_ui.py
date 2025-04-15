@@ -2,6 +2,7 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, tooltip
 from .prompts import DEFAULT_NO_CONTEXT_PROMPT, DEFAULT_WITH_CONTEXT_PROMPT
+import os
 
 # 笔记类型配置类 - 用于存储单个笔记类型的配置
 class NoteTypeConfig:
@@ -16,8 +17,11 @@ class ConfigDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        # 直接使用"anki_lexisage"作为插件ID
-        self.config = mw.addonManager.getConfig("anki_lexisage")
+        # 获取当前插件ID
+        self.addon_dir = os.path.dirname(os.path.abspath(__file__))
+        self.addon_name = os.path.basename(self.addon_dir)
+        # 使用插件ID获取配置
+        self.config = mw.addonManager.getConfig(self.addon_name)
         if not self.config:
             self.config = {}
 
@@ -474,8 +478,8 @@ class ConfigDialog(QDialog):
             }
         }
 
-        # 保存配置
-        mw.addonManager.writeConfig("anki_lexisage", self.config)
+        # 保存配置，使用实际的插件ID而非硬编码值
+        mw.addonManager.writeConfig(self.addon_name, self.config)
 
     def accept(self):
         # 检查是否至少有一个笔记类型配置
