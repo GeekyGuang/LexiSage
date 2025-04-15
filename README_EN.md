@@ -11,8 +11,6 @@ English | [中文](README.md)
 - Automatic parsing of word meanings and usage
 - Context-based word explanations
 - Batch processing to improve study efficiency
-- Customizable system prompts
-- Support for multiple note types
 - Support for various AI services (requires your own API Keys)
 
 ## Installation
@@ -66,23 +64,6 @@ This project uses the [MIT License](LICENSE) - see the LICENSE file for details.
 ## Acknowledgements
 - Thanks to all contributors and users
 - Special thanks to the Anki development team for providing an excellent platform
-
-## Supported AI Services
-- **OpenAI**: Supports GPT-3.5/GPT-4 and other models
-- **XAI**: Supports custom API interfaces
-- **DeepSeek**: Supports DeepSeek Chat models
-
-## Custom Prompts
-In prompt templates, you can use the following variables:
-- `{word}`: Represents the content of the field to explain
-- `{context}`: Represents the content of the context field (if any)
-
-## Troubleshooting
-- If the plugin doesn't work properly, check:
-  - Whether your API key is correct
-  - Whether your network connection is stable
-  - Whether you've selected the correct fields
-- If you encounter problems, try restarting Anki
 
 ## Privacy Statement
 This plugin sends your card content to the AI service you configure, so please ensure you understand the relevant privacy policies. API keys are stored only in local configuration files and are not uploaded.
