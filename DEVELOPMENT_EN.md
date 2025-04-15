@@ -24,7 +24,7 @@ This document provides detailed information on how to develop, build, and contri
    - `manifest.json`: Plugin metadata, including name, version, etc.
    - `meta.json`: Anki version compatibility information (important, determines supported Anki versions)
    - `config.json`: Default configuration (optional)
-   - `LICENSE`: License file
+   - `LICENSE`: License file (GNU General Public License v3.0)
 
 2. Update version numbers:
    - Update the `version` field in the `manifest.json` file

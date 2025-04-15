@@ -59,7 +59,7 @@ The plugin includes built-in prompts, but if you're not satisfied with the defin
 If you want to understand the project structure, build process, or want to contribute, please check our [Development Guide](DEVELOPMENT_EN.md).
 
 ## License
-This project uses the [MIT License](LICENSE) - see the LICENSE file for details.
+This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE) - see the LICENSE file for details.
 
 ## Acknowledgements
 - Thanks to all contributors and users

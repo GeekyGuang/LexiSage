@@ -26,9 +26,9 @@
 
 1. 打开Anki，在"工具"菜单中选择"LexiSage 设置..."
 2. 设置 AI 服务。
-  
+
    插件本身不提供 AI 服务，需要用户自行购买 AI 服务商的 API Key 填入插件中，在获得 API Key 之后，选择对应的服务商，填写正确的 API Key 和要使用的模型。
-   
+
    AI 服务商推荐
    - [xAI](https://console.x.ai)(充 5 刀每个月送 150 刀，很划算)
    - [DeepSeek](https://platform.deepseek.com)(国产 AI 之光)
@@ -62,7 +62,7 @@
 如果你想了解项目结构，构建流程，或者想要参与贡献，请查看我们的[开发者文档](DEVELOPMENT.md)。
 
 ## 许可证
-本项目采用 [MIT许可证](LICENSE) - 详情请参阅LICENSE文件。
+本项目采用 [GNU通用公共许可证v3.0(GPL-3.0)](LICENSE) - 详情请参阅LICENSE文件。
 
 ## 致谢
 - 感谢所有贡献者和用户

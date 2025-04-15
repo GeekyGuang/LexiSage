@@ -24,7 +24,7 @@
    - `manifest.json`: 插件元数据，包含名称、版本等信息
    - `meta.json`: Anki版本兼容性信息(重要，决定支持的Anki版本)
    - `config.json`: 默认配置(可选)
-   - `LICENSE`: 许可证文件
+   - `LICENSE`: 许可证文件 (GNU通用公共许可证v3.0)
 
 2. 更新版本号:
    - 在`manifest.json`文件中更新`version`字段
