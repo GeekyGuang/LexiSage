@@ -188,7 +188,7 @@ class ConfigDialog(QDialog):
 
         # 创建服务配置区域
         self.service_stack = QStackedWidget()
-        self.ai_service_combo.currentIndexChanged.connect(self.service_stack.setCurrentIndex)
+        self.ai_service_combo.currentIndexChanged.connect(self.on_service_changed)
         ai_layout.addWidget(self.service_stack)
 
         # OpenAI 配置
@@ -392,18 +392,29 @@ class ConfigDialog(QDialog):
 
         # 加载系统提示词
         # 先加载普通系统提示词，兼容旧版本配置
-        system_prompt = self.config.get("systemPrompt", DEFAULT_NO_CONTEXT_PROMPT)
+        system_prompt = self.config.get("systemPrompt", "")
+
+        # 检查是否有用户自定义提示词
+        no_context_prompt_exists = "noContextSystemPrompt" in self.config and self.config["noContextSystemPrompt"]
+        with_context_prompt_exists = "withContextSystemPrompt" in self.config and self.config["withContextSystemPrompt"]
 
         # 加载无上下文系统提示词
-        no_context_system_prompt = self.config.get("noContextSystemPrompt", system_prompt)
-        self.no_context_system_prompt.setPlainText(no_context_system_prompt)
+        if no_context_prompt_exists:
+            # 使用用户已保存的提示词
+            no_context_system_prompt = self.config.get("noContextSystemPrompt", "")
+            self.no_context_system_prompt.setPlainText(no_context_system_prompt)
+        else:
+            # 用户没有设置提示词，输入框留空
+            self.no_context_system_prompt.setPlainText("")
 
         # 加载有上下文系统提示词
-        with_context_system_prompt = self.config.get("withContextSystemPrompt", system_prompt)
-        # 如果没有专门设置有上下文提示词，且使用的是默认提示词，则使用DEFAULT_WITH_CONTEXT_PROMPT
-        if with_context_system_prompt == DEFAULT_NO_CONTEXT_PROMPT:
-            with_context_system_prompt = DEFAULT_WITH_CONTEXT_PROMPT
-        self.with_context_system_prompt.setPlainText(with_context_system_prompt)
+        if with_context_prompt_exists:
+            # 使用用户已保存的提示词
+            with_context_system_prompt = self.config.get("withContextSystemPrompt", "")
+            self.with_context_system_prompt.setPlainText(with_context_system_prompt)
+        else:
+            # 用户没有设置提示词，输入框留空
+            self.with_context_system_prompt.setPlainText("")
 
         # 加载AI服务设置
         ai_service = self.config.get("aiService", "openai").lower()
@@ -431,9 +442,9 @@ class ConfigDialog(QDialog):
 
         # DeepSeek
         deepseek_config = api_config.get("deepseek", {})
-        self.deepseek_baseurl.setText(deepseek_config.get("baseUrl", ""))
+        self.deepseek_baseurl.setText(deepseek_config.get("baseUrl", "https://api.deepseek.com/chat/completions"))
         self.deepseek_apikey.setText(deepseek_config.get("apiKey", ""))
-        self.deepseek_model.setText(deepseek_config.get("model", ""))
+        self.deepseek_model.setText(deepseek_config.get("model", "deepseek-chat"))
 
     def save_config(self):
         ai_service_index = self.ai_service_combo.currentIndex()
@@ -513,6 +524,27 @@ class ConfigDialog(QDialog):
         self.save_config()
         tooltip("配置已保存")
         super().accept()
+
+    def on_service_changed(self, index):
+        # 切换服务页面
+        self.service_stack.setCurrentIndex(index)
+
+        # 确保每次切换服务时默认值都正确设置
+        if index == 0:  # OpenAI
+            if not self.openai_baseurl.text():
+                self.openai_baseurl.setText("https://api.openai.com/v1/chat/completions")
+            if not self.openai_model.text():
+                self.openai_model.setText("gpt-3.5-turbo")
+        elif index == 1:  # XAI
+            if not self.xai_baseurl.text():
+                self.xai_baseurl.setText("https://api.x.ai/v1/chat/completions")
+            if not self.xai_model.text():
+                self.xai_model.setText("grok-2-latest")
+        elif index == 2:  # DeepSeek
+            if not self.deepseek_baseurl.text():
+                self.deepseek_baseurl.setText("https://api.deepseek.com/chat/completions")
+            if not self.deepseek_model.text():
+                self.deepseek_model.setText("deepseek-chat")
 
 # 设置配置UI的入口函数
 def setup_config_ui(parent):
