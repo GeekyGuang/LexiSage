@@ -29,9 +29,12 @@
    AI 服务商推荐
    - [xAI](https://console.x.ai)(充 5 刀每个月送 150 刀，很划算)
    - [DeepSeek](https://platform.deepseek.com)(国产 AI 之光)
+   
    ![image](https://github.com/user-attachments/assets/1d33d54d-ca04-4507-83bd-84267557fb0a)
 3. 为你的笔记类型添加配置，指定模板中要 AI 解释的字段，指定存放输出结果的字段，还可以为单词指定上下文，根据上下文来释义。
+  
    ![image](https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49)
+   
    - 点 + 号添加笔记类型配置
    - 选择要解释的字段
    - 选择上下文字段（可选）
@@ -44,6 +47,7 @@
 1. 浏览牌组
 2. 选择要生成释义卡片
 3. 点击菜单栏“LexiSage”-“批量生成释义”，等待完成
+  
    ![image](https://github.com/user-attachments/assets/6ebbb32e-e9a9-4f84-96d1-cc05041e3b8c)
 
 ### 自定义 Prompt
