@@ -1,5 +1,7 @@
 # LexiSage - Anki智能释义插件
 
+> LexiSage – Let your cards speak with clarity and wisdom.
+
 <img src="screenshot.png" alt="LexiSage截图" width="600"/>
 
 ## 项目简介
