@@ -39,6 +39,7 @@
    ![image](https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49)
 
    - 点 + 号添加笔记类型配置
+   - 选择笔记类型
    - 选择要解释的字段
    - 选择上下文字段（可选）
    - 选择释义目标字段
@@ -48,7 +49,7 @@
 ### 释义生成
 
 1. 浏览牌组
-2. 选择要生成释义卡片
+2. 选择要生成释义的卡片
 3. 点击菜单栏"LexiSage"-"批量生成释义"，等待完成
 
    ![image](https://github.com/user-attachments/assets/6ebbb32e-e9a9-4f84-96d1-cc05041e3b8c)

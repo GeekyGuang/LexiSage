@@ -36,6 +36,7 @@ English | [中文](README.md)
    ![image](https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49)
 
    - Click the + button to add note type configuration
+   - Select note type
    - Select the field to explain
    - Select context field (optional)
    - Select destination field for definitions
@@ -45,7 +46,7 @@ English | [中文](README.md)
 ### Generating Definitions
 
 1. Browse your card collection
-2. Select the cards for which you want to generate definitions
+2. Select cards for which you want to generate definitions
 3. Click "LexiSage" > "Generate Batch Definitions" in the menu bar, then wait for completion
 
    ![image](https://github.com/user-attachments/assets/6ebbb32e-e9a9-4f84-96d1-cc05041e3b8c)
