@@ -30,10 +30,12 @@ English | [中文](README.md)
    - [xAI](https://console.x.ai) (Great value: $5 monthly charge gives you $150 credit)
    - [DeepSeek](https://platform.deepseek.com) (Leading Chinese AI platform)
 
-   ![image](https://github.com/user-attachments/assets/1d33d54d-ca04-4507-83bd-84267557fb0a)
+
+   ![image](https://github.com/user-attachments/assets/372d2766-49de-48fd-8333-0acd741fa6ab)
+
 3. Add configuration for your note types, specify which template fields the AI should explain, designate output result fields, and optionally add context for more accurate definitions.
 
-   ![image](https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49)
+   ![image](https://github.com/user-attachments/assets/cb48ee74-3e36-4fc1-9ff9-14af6d3c5179)
 
    - Click the + button to add note type configuration
    - Select note type
