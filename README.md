@@ -30,13 +30,14 @@
    插件本身不提供 AI 服务，需要用户自行购买 AI 服务商的 API Key 填入插件中，在获得 API Key 之后，选择对应的服务商，填写正确的 API Key 和要使用的模型。
 
    AI 服务商推荐
-   - [xAI](https://console.x.ai)(充 5 刀每个月送 150 刀，很划算)
    - [DeepSeek](https://platform.deepseek.com)(国产 AI 之光)
+   - [xAI](https://console.x.ai)
 
-   ![image](https://github.com/user-attachments/assets/1d33d54d-ca04-4507-83bd-84267557fb0a)
+   ![image](https://github.com/user-attachments/assets/372d2766-49de-48fd-8333-0acd741fa6ab)
+
 3. 为你的笔记类型添加配置，指定模板中要 AI 解释的字段，指定存放输出结果的字段，还可以为单词指定上下文，根据上下文来释义。
 
-   ![image](https://github.com/user-attachments/assets/ca6f59d6-ab80-4911-b6e0-24c5f3fa0e49)
+   ![image](https://github.com/user-attachments/assets/cb48ee74-3e36-4fc1-9ff9-14af6d3c5179)
 
    - 点 + 号添加笔记类型配置
    - 选择笔记类型
