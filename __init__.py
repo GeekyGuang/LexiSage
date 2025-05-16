@@ -170,7 +170,39 @@ def setup_browser_menu(browser):
     lexisage_menu.addAction(settings_action)
     browser._settings_action = settings_action  # 保存引用到浏览器对象
 
+    # 延迟一小段时间后强制更新侧边栏 - 使用QTimer确保UI更新完成后再执行
+    QTimer.singleShot(100, lambda: fix_sidebar_visibility(browser))
+
     # 强制QApplication处理事件，确保UI更新
+    mw.app.processEvents()
+
+# 修复侧边栏可见性问题
+def fix_sidebar_visibility(browser):
+    # 检查不同版本Anki的侧边栏结构
+    if hasattr(browser, 'sidebarDockWidget') and hasattr(browser.sidebarDockWidget, 'setVisible'):
+        # Anki 2.1.50+的结构
+        browser.sidebarDockWidget.setVisible(True)
+    elif hasattr(browser, 'form') and hasattr(browser.form, 'filterButton'):
+        # 一些Anki版本使用filterButton
+        browser.form.filterButton.click()
+        browser.form.filterButton.click()  # 点击两次以确保显示
+    elif hasattr(browser, 'form') and hasattr(browser.form, 'splitter'):
+        # 另一种可能的结构
+        sizes = browser.form.splitter.sizes()
+        if sizes[0] == 0:
+            sizes[0] = 200  # 设置侧边栏宽度
+            browser.form.splitter.setSizes(sizes)
+
+    # 尝试直接访问侧边栏组件并强制更新
+    try:
+        if hasattr(browser, 'sidebar'):
+            browser.sidebar.refresh()
+        elif hasattr(browser, 'sidebarTree'):
+            browser.sidebarTree.refresh()
+    except:
+        pass  # 忽略可能的错误
+
+    # 强制处理事件以确保UI更新
     mw.app.processEvents()
 
 # 为工具菜单添加设置选项
