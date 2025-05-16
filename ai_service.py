@@ -251,25 +251,54 @@ def call_deepseek_api(prompt, config, system_prompt=None):
 
 # 根据配置选择合适的API并生成释义
 def generate_explanation(word, context, config):
-    # 根据是否有上下文选择相应的系统提示词
-    if context and context.strip():
-        # 有上下文时使用有上下文的系统提示词
-        system_prompt = config.get("withContextSystemPrompt")
-        # 如果配置中没有或为空，使用默认提示词
-        if not system_prompt or not system_prompt.strip():
+    # 首先确定是否有上下文
+    has_context = bool(context and context.strip())
+
+    if has_context:
+        # 有上下文的情况
+        # 始终使用 withContextSystemPrompt 配置项
+        custom_with_context = config.get("withContextSystemPrompt", "").strip()
+
+        # 如果用户设置了自定义有上下文提示词，使用它
+        if custom_with_context:
+            # 当用户自定义了提示词时，不再需要用户提示词
+            system_prompt = custom_with_context
+            # 直接将单词和上下文作为用户输入
+            user_prompt = f"{word}\n\n上下文：{context}"
+        else:
+            # 否则使用默认有上下文提示词和标准用户提示词
             system_prompt = DEFAULT_WITH_CONTEXT_PROMPT
+            # 使用标准格式的用户提示词
+            user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
 
-        # 使用固定格式的用户提示词
-        user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
+        # 调试信息
+        print(f"[LexiSage Debug] 使用有上下文提示词")
+        print(f"[LexiSage Debug] 使用自定义提示词: {bool(custom_with_context)}")
+
     else:
-        # 没有上下文时使用无上下文的系统提示词
-        system_prompt = config.get("noContextSystemPrompt")
-        # 如果配置中没有或为空，使用默认提示词
-        if not system_prompt or not system_prompt.strip():
-            system_prompt = DEFAULT_NO_CONTEXT_PROMPT
+        # 无上下文的情况
+        # 始终使用 noContextSystemPrompt 配置项
+        custom_no_context = config.get("noContextSystemPrompt", "").strip()
 
-        # 使用固定格式的用户提示词
-        user_prompt = f"请讲解「{word}」"
+        # 如果用户设置了自定义无上下文提示词，使用它
+        if custom_no_context:
+            # 当用户自定义了提示词时，不再需要用户提示词
+            system_prompt = custom_no_context
+            # 直接将单词作为用户输入
+            user_prompt = word
+        else:
+            # 否则使用默认无上下文提示词和标准用户提示词
+            system_prompt = DEFAULT_NO_CONTEXT_PROMPT
+            # 使用标准格式的用户提示词
+            user_prompt = f"请讲解「{word}」"
+
+        # 调试信息
+        print(f"[LexiSage Debug] 使用无上下文提示词")
+        print(f"[LexiSage Debug] 使用自定义提示词: {bool(custom_no_context)}")
+
+    # 将提示词和所选提示词类型记录到日志，以便调试
+    print(f"[LexiSage Debug] 使用的系统提示词内容: {system_prompt[:50]}...")
+    print(f"[LexiSage Debug] 使用的用户提示词内容: {user_prompt}")
 
     # 根据配置选择AI服务
     ai_service = config.get("aiService", "openai")

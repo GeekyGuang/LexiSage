@@ -519,12 +519,18 @@ class ConfigDialog(QDialog):
         self.config["noteTypeConfigs"] = note_type_configs
         self.config["aiService"] = ai_service
 
-        # 保存系统提示词
-        self.config["noContextSystemPrompt"] = self.no_context_system_prompt.toPlainText()
-        self.config["withContextSystemPrompt"] = self.with_context_system_prompt.toPlainText()
+        # 分别保存两种自定义提示词（无上下文和有上下文）
+        # 重要：这两个提示词完全独立，不要混淆
+        no_context_prompt = self.no_context_system_prompt.toPlainText()
+        with_context_prompt = self.with_context_system_prompt.toPlainText()
 
-        # 保留原始systemPrompt字段以便向后兼容
-        self.config["systemPrompt"] = self.config["noContextSystemPrompt"]
+        # 设置两个独立的提示词配置
+        self.config["noContextSystemPrompt"] = no_context_prompt
+        self.config["withContextSystemPrompt"] = with_context_prompt
+
+        # 删除旧版提示词配置，避免混淆
+        if "systemPrompt" in self.config:
+            del self.config["systemPrompt"]
 
         # API配置
         self.config["apiConfig"] = {
