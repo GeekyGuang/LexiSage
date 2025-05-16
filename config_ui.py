@@ -56,8 +56,11 @@ class ConfigDialog(QDialog):
 
     def setupUI(self):
         self.setWindowTitle("LexiSage设置")
-        self.setMinimumWidth(600)
-        self.setMinimumHeight(500)
+        # 使用固定大小600x560
+        self.setFixedSize(600, 560)
+        # 移除最小尺寸限制，因为固定尺寸会覆盖此设置
+        # self.setMinimumWidth(500)
+        # self.setMinimumHeight(350)
 
         layout = QVBoxLayout(self)
 
@@ -65,10 +68,10 @@ class ConfigDialog(QDialog):
         tabs = QTabWidget()
         layout.addWidget(tabs)
 
-        # 基本设置选项卡
+        # 基本设置选项卡（改名为笔记类型设置）
         basic_tab = QWidget()
         basic_layout = QVBoxLayout(basic_tab)
-        tabs.addTab(basic_tab, "基本设置")
+        tabs.addTab(basic_tab, "笔记类型设置")
 
         # 使用水平布局组合笔记类型配置区域和设置区域
         note_type_config_layout = QHBoxLayout()
@@ -131,44 +134,6 @@ class ConfigDialog(QDialog):
         note_type_layout.addRow("", self.save_config_btn)
 
         note_type_config_layout.addWidget(self.note_type_settings_group, 1)  # 添加伸展因子，右侧占更多空间
-
-        # 自定义提示词
-        prompt_group = QGroupBox("自定义提示词（可选）")
-        prompt_layout = QVBoxLayout(prompt_group)
-
-        # 说明文本
-        optional_info = QLabel("以下提示词为可选项，如果不设置则使用插件内置的默认提示词。")
-        optional_info.setStyleSheet("color: #1e88e5; font-size: 12px;")
-        optional_info.setWordWrap(True)
-        prompt_layout.addWidget(optional_info)
-
-        # 无上下文系统提示词
-        no_context_system_label = QLabel("无上下文系统提示词:")
-        no_context_system_label.setToolTip("当笔记没有上下文字段或上下文为空时使用的系统提示词")
-        prompt_layout.addWidget(no_context_system_label)
-
-        self.no_context_system_prompt = QPlainTextEdit()
-        self.no_context_system_prompt.setPlaceholderText("无上下文时给AI的指令，设置AI的行为、角色和约束")
-        self.no_context_system_prompt.setMinimumHeight(100)
-        prompt_layout.addWidget(self.no_context_system_prompt)
-
-        # 有上下文系统提示词
-        with_context_system_label = QLabel("有上下文系统提示词:")
-        with_context_system_label.setToolTip("当笔记有上下文字段且内容不为空时使用的系统提示词")
-        prompt_layout.addWidget(with_context_system_label)
-
-        self.with_context_system_prompt = QPlainTextEdit()
-        self.with_context_system_prompt.setPlaceholderText("有上下文时给AI的指令，设置AI的行为、角色和约束")
-        self.with_context_system_prompt.setMinimumHeight(100)
-        prompt_layout.addWidget(self.with_context_system_prompt)
-
-        # 底部说明文本
-        prompt_info = QLabel("提示：通过不同的系统提示词设置AI的行为方式和风格，{word}会被替换为要解释的词语，{context}会被替换为上下文内容")
-        prompt_info.setStyleSheet("color: gray; font-size: 11px;")
-        prompt_info.setWordWrap(True)
-        prompt_layout.addWidget(prompt_info)
-
-        basic_layout.addWidget(prompt_group)
 
         # AI服务选项卡
         ai_tab = QWidget()
@@ -257,7 +222,98 @@ class ConfigDialog(QDialog):
         deepseek_layout.addRow("Model:", self.deepseek_model)
         self.service_stack.addWidget(deepseek_widget)
 
-        # 按钮区域
+        # 自定义提示词选项卡（移到最右边）
+        prompts_tab = QWidget()
+        prompts_layout = QVBoxLayout(prompts_tab)
+        tabs.addTab(prompts_tab, "自定义提示词")
+
+        # 提示词设置区域
+        prompt_group = QGroupBox("自定义提示词（可选）")
+        prompt_layout = QVBoxLayout(prompt_group)
+
+        # 说明文本
+        optional_info = QLabel("以下提示词为可选项，如果不设置则使用插件内置的默认提示词。")
+        optional_info.setStyleSheet("color: #1e88e5; font-size: 12px;")
+        optional_info.setWordWrap(True)
+        prompt_layout.addWidget(optional_info)
+
+        # 无上下文系统提示词
+        no_context_system_label = QLabel("无上下文系统提示词:")
+        no_context_system_label.setToolTip("当笔记没有上下文字段或上下文为空时使用的系统提示词")
+        prompt_layout.addWidget(no_context_system_label)
+
+        self.no_context_system_prompt = QPlainTextEdit()
+        self.no_context_system_prompt.setPlaceholderText("无上下文时给AI的指令，设置AI的行为、角色和约束")
+        self.no_context_system_prompt.setMinimumHeight(60)
+        prompt_layout.addWidget(self.no_context_system_prompt)
+
+        # 有上下文系统提示词
+        with_context_system_label = QLabel("有上下文系统提示词:")
+        with_context_system_label.setToolTip("当笔记有上下文字段且内容不为空时使用的系统提示词")
+        prompt_layout.addWidget(with_context_system_label)
+
+        self.with_context_system_prompt = QPlainTextEdit()
+        self.with_context_system_prompt.setPlaceholderText("有上下文时给AI的指令，设置AI的行为、角色和约束")
+        self.with_context_system_prompt.setMinimumHeight(60)
+        prompt_layout.addWidget(self.with_context_system_prompt)
+
+        # 添加垂直间距
+        prompt_layout.addSpacing(15)
+
+        # 添加分隔线
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setStyleSheet("background-color: #ddd;")
+        prompt_layout.addWidget(separator)
+
+        # 变量说明
+        format_label = QLabel("提示：下列变量会在提示词中被替换")
+        format_label.setStyleSheet("color: #444; margin-top: 10px; font-weight: bold;")
+        prompt_layout.addWidget(format_label)
+
+        # 使用QGridLayout来更好地展示可替换的变量
+        format_grid = QGridLayout()
+        format_grid.setVerticalSpacing(5)  # 设置网格垂直间距
+        format_grid.setHorizontalSpacing(15)  # 设置网格水平间距
+        format_grid.setContentsMargins(10, 5, 10, 5)  # 设置内边距
+
+        # 添加变量
+        var1_label = QLabel("{word}")
+        var1_label.setStyleSheet("font-family: monospace; font-weight: bold; color: #0077cc;")
+        var1_desc = QLabel("- 被替换为要解释的词语")
+        format_grid.addWidget(var1_label, 0, 0)
+        format_grid.addWidget(var1_desc, 0, 1)
+
+        var2_label = QLabel("{context}")
+        var2_label.setStyleSheet("font-family: monospace; font-weight: bold; color: #0077cc;")
+        var2_desc = QLabel("- 被替换为上下文内容")
+        format_grid.addWidget(var2_label, 1, 0)
+        format_grid.addWidget(var2_desc, 1, 1)
+
+        # 添加网格布局
+        prompt_layout.addLayout(format_grid)
+
+        # 添加更多的垂直间距
+        prompt_layout.addSpacing(10)
+
+        # 查看默认提示词按钮
+        view_default_prompts_layout = QHBoxLayout()
+        view_default_prompts_layout.addStretch(1)
+
+        view_no_context_button = QPushButton("查看无上下文默认提示词")
+        view_no_context_button.clicked.connect(lambda: self.view_default_prompt("no_context"))
+        view_default_prompts_layout.addWidget(view_no_context_button)
+
+        view_with_context_button = QPushButton("查看有上下文默认提示词")
+        view_with_context_button.clicked.connect(lambda: self.view_default_prompt("with_context"))
+        view_default_prompts_layout.addWidget(view_with_context_button)
+
+        prompt_layout.addLayout(view_default_prompts_layout)
+
+        prompts_layout.addWidget(prompt_group)
+
+        # 添加按钮
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -545,6 +601,50 @@ class ConfigDialog(QDialog):
                 self.deepseek_baseurl.setText("https://api.deepseek.com/chat/completions")
             if not self.deepseek_model.text():
                 self.deepseek_model.setText("deepseek-chat")
+
+    def view_default_prompt(self, prompt_type):
+        """显示默认提示词的对话框"""
+        from .prompts import DEFAULT_NO_CONTEXT_PROMPT, DEFAULT_WITH_CONTEXT_PROMPT
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("默认提示词查看")
+        dialog.setMinimumWidth(600)
+        dialog.setMinimumHeight(400)
+
+        layout = QVBoxLayout(dialog)
+
+        if prompt_type == "no_context":
+            title = QLabel("无上下文默认提示词：")
+            content = DEFAULT_NO_CONTEXT_PROMPT
+        else:
+            title = QLabel("有上下文默认提示词：")
+            content = DEFAULT_WITH_CONTEXT_PROMPT
+
+        title.setStyleSheet("font-weight: bold; color: #1e88e5;")
+        layout.addWidget(title)
+
+        text_view = QPlainTextEdit()
+        text_view.setPlainText(content)
+        text_view.setReadOnly(True)  # 设为只读
+        layout.addWidget(text_view)
+
+        # 添加提示
+        hint = QLabel("您可以复制这些内容作为自定义提示词的基础，然后根据需要进行修改。")
+        hint.setStyleSheet("color: gray; font-style: italic;")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        # 添加按钮
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        button_box.rejected.connect(dialog.reject)
+
+        copy_button = QPushButton("复制到剪贴板")
+        copy_button.clicked.connect(lambda: QApplication.clipboard().setText(content))
+        button_box.addButton(copy_button, QDialogButtonBox.ButtonRole.ActionRole)
+
+        layout.addWidget(button_box)
+
+        dialog.exec()
 
 # 设置配置UI的入口函数
 def setup_config_ui(parent):
