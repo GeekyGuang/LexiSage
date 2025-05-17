@@ -261,15 +261,11 @@ def generate_explanation(word, context, config):
 
         # 如果用户设置了自定义有上下文提示词，使用它
         if custom_with_context:
-            # 当用户自定义了提示词时，不再需要用户提示词
             system_prompt = custom_with_context
-            # 直接将单词和上下文作为用户输入
-            user_prompt = f"{word}\n\n上下文：{context}"
         else:
-            # 否则使用默认有上下文提示词和标准用户提示词
             system_prompt = DEFAULT_WITH_CONTEXT_PROMPT
-            # 使用标准格式的用户提示词
-            user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
+
+        user_prompt = f"请讲解词语或短语「{word}」在「{context}」中的用法和含义。"
 
         # 调试信息
         print(f"[LexiSage Debug] 使用有上下文提示词")
@@ -282,15 +278,11 @@ def generate_explanation(word, context, config):
 
         # 如果用户设置了自定义无上下文提示词，使用它
         if custom_no_context:
-            # 当用户自定义了提示词时，不再需要用户提示词
             system_prompt = custom_no_context
-            # 直接将单词作为用户输入
-            user_prompt = word
         else:
-            # 否则使用默认无上下文提示词和标准用户提示词
             system_prompt = DEFAULT_NO_CONTEXT_PROMPT
-            # 使用标准格式的用户提示词
-            user_prompt = f"请讲解「{word}」"
+
+        user_prompt = f"请讲解「{word}」"
 
         # 调试信息
         print(f"[LexiSage Debug] 使用无上下文提示词")
