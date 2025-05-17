@@ -6,6 +6,12 @@ from anki.hooks import addHook
 from aqt.browser import Browser
 from aqt.operations import CollectionOp
 import time
+import platform
+
+# 辅助函数：安全处理UI事件
+def safe_process_events():
+    """以安全的方式处理UI事件，确保Windows上不会出现窗口问题"""
+    QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
 
 # 自定义信息显示函数，使界面更加一致
 def showInfo(text, parent=None, title="LexiSage", textFormat="plain"):
@@ -137,21 +143,38 @@ def on_generate_explanation(editor):
     if context_field and context_field in note:
         context = note[context_field]
 
-    # 显示进度对话框
-    progress = QProgressDialog("正在生成释义...", "取消", 0, 100, editor.parentWindow)
+        # 显示进度对话框 - 使用特定设置防止Windows上弹出主界面
+    parent_window = editor.parentWindow
+
+    progress = QProgressDialog(parent_window)
     progress.setWindowTitle("LexiSage - 生成释义")
+    progress.setLabelText("正在生成释义...")
+    progress.setCancelButtonText("取消")
+    progress.setRange(0, 100)
     progress.setMinimumWidth(300)
     progress.setMinimumDuration(0)  # 立即显示，不等待
-    progress.setWindowModality(Qt.WindowModality.NonModal)  # 非模态，允许取消
+    # 关键：使用WindowModal模式避免激活主窗口
+    progress.setWindowModality(Qt.WindowModality.WindowModal)
     progress.setAutoClose(True)
     progress.setValue(10)  # 立即显示一些进度
-    progress.show()
-    QApplication.processEvents()  # 确保UI响应
+
+    # 设置窗口标志，确保它总是在顶层但不获取主窗口焦点
+    progress.setWindowFlags(Qt.WindowType.Dialog |
+                           Qt.WindowType.CustomizeWindowHint |
+                           Qt.WindowType.WindowTitleHint |
+                           Qt.WindowType.WindowCloseButtonHint)
+
+    # 确保进度对话框显示在编辑器窗口上方
+    progress.setParent(parent_window)
+
+    # 使用open()而不是show()
+    progress.open()
+    safe_process_events()  # 确保UI响应
 
     # 更新进度
     progress.setValue(20)
     progress.setLabelText(f"正在处理: '{word}'")
-    QApplication.processEvents()  # 确保UI响应
+    safe_process_events()  # 确保UI响应
 
     # 检查是否取消
     if progress.wasCanceled():
@@ -173,7 +196,7 @@ def on_generate_explanation(editor):
     # 更新进度
     progress.setValue(80)
     progress.setLabelText("正在更新笔记...")
-    QApplication.processEvents()  # 确保UI响应
+    safe_process_events()  # 确保UI响应
 
     # 最后检查一次是否取消
     if progress.wasCanceled():
@@ -191,7 +214,7 @@ def on_generate_explanation(editor):
         # 完成
         progress.setValue(100)
         progress.setLabelText("完成!")
-        QApplication.processEvents()
+        safe_process_events()
 
         # 最后一次检查取消状态
         if progress.wasCanceled():
@@ -206,7 +229,7 @@ def on_generate_explanation(editor):
         # 完成但有错误
         progress.setValue(100)
         progress.setLabelText("生成失败")
-        QApplication.processEvents()
+        safe_process_events()
 
         # 即使失败也检查取消状态
         if progress.wasCanceled():
@@ -259,7 +282,7 @@ def setup_browser_menu(browser):
     QTimer.singleShot(100, lambda: fix_sidebar_visibility(browser))
 
     # 强制QApplication处理事件，确保UI更新
-    mw.app.processEvents()
+    safe_process_events()
 
 # 修复侧边栏可见性问题
 def fix_sidebar_visibility(browser):
@@ -288,7 +311,7 @@ def fix_sidebar_visibility(browser):
         pass  # 忽略可能的错误
 
     # 强制处理事件以确保UI更新
-    mw.app.processEvents()
+    safe_process_events()
 
 # 为工具菜单添加设置选项
 def setup_tools_menu():
@@ -312,23 +335,38 @@ def on_browser_generate_explanation(browser):
     if not askUser(f"确定要为选中的{len(selected_notes)}条笔记生成释义吗？"):
         return
 
-    # 创建一个更好的进度对话框
-    progress = QProgressDialog(browser)
+        # 创建一个更好的进度对话框 - 以特定方式避免Windows上弹出主界面
+    browser_window = browser
+    if hasattr(browser, 'window'):
+        browser_window = browser.window()
+
+    progress = QProgressDialog(browser_window)
     progress.setWindowTitle("LexiSage - 生成释义")
     progress.setLabelText("准备中...")
     progress.setCancelButtonText("取消")
+    progress.setRange(0, len(selected_notes))
     progress.setMinimumWidth(350)
     progress.setMinimumDuration(0)  # 立即显示，不等待
-    # 使用非模态对话框，这样取消按钮可以响应
-    progress.setWindowModality(Qt.WindowModality.NonModal)
-    progress.setMinimum(0)
-    progress.setMaximum(len(selected_notes))
     progress.setAutoClose(False)
     progress.setValue(0)
-    progress.show()
 
-    # 增加刷新UI的频率
-    QApplication.processEvents()
+    # 关键设置：使用DialogModal模式和正确的父窗口，避免激活主窗口
+    progress.setWindowModality(Qt.WindowModality.WindowModal)
+
+    # 设置窗口标志，确保它总是在顶层但不获取主窗口焦点
+    progress.setWindowFlags(Qt.WindowType.Dialog |
+                           Qt.WindowType.CustomizeWindowHint |
+                           Qt.WindowType.WindowTitleHint |
+                           Qt.WindowType.WindowCloseButtonHint)
+
+    # 将对话框设置为browser的子窗口，而非主窗口的子窗口
+    progress.setParent(browser_window)
+
+    # 开始显示进度条
+    progress.open()
+
+    # 增加刷新UI的频率 - 使用更安全的方式处理事件
+    safe_process_events()
 
     # 计数器
     success_count = 0
@@ -365,7 +403,7 @@ def on_browser_generate_explanation(browser):
             progress.setLabelText(f"正在处理 {current}/{total_notes} ({(current / total_notes * 100):.1f}%)")
 
             # 确保UI响应
-            mw.app.processEvents()
+            safe_process_events()
 
             note = mw.col.get_note(nid)
 
@@ -402,7 +440,7 @@ def on_browser_generate_explanation(browser):
 
             # 更新进度显示为当前处理的词语
             progress.setLabelText(f"正在处理: '{word}' ({current}/{total_notes})")
-            QApplication.processEvents()  # 确保UI响应，显示当前处理的词语
+            safe_process_events()  # 确保UI响应，显示当前处理的词语
 
             # 再次检查取消状态
             if progress.wasCanceled():
@@ -416,7 +454,7 @@ def on_browser_generate_explanation(browser):
                 if progress.wasCanceled():
                     was_canceled = True
                     break
-                QApplication.processEvents()  # 确保UI响应
+                safe_process_events()  # 确保UI响应
             except Exception as e:
                 # 处理API调用过程中可能出现的异常
                 error_count += 1
@@ -432,7 +470,7 @@ def on_browser_generate_explanation(browser):
                 # 避免API请求过于频繁，但允许UI更新
                 for _ in range(5):  # 将0.5秒分成5段，每段之间处理事件
                     time.sleep(0.1)
-                    QApplication.processEvents()
+                    safe_process_events()
                     # 检查取消状态
                     if progress.wasCanceled():
                         was_canceled = True
@@ -442,7 +480,7 @@ def on_browser_generate_explanation(browser):
 
             # 再次更新进度，确保UI响应
             progress.setValue(current)
-            QApplication.processEvents()
+            safe_process_events()
 
     except Exception as e:
         # 捕获整个过程中的异常
@@ -453,7 +491,7 @@ def on_browser_generate_explanation(browser):
         if not progress.wasCanceled():
             progress.setValue(len(selected_notes))
             progress.setLabelText("完成!")
-        QApplication.processEvents()
+        safe_process_events()
 
         # 关闭进度对话框
         progress.close()
