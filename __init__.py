@@ -1,11 +1,31 @@
 from aqt import mw
-from aqt.utils import showInfo, qconnect, tooltip
+from aqt.utils import showInfo as anki_showInfo, qconnect, tooltip
 from aqt.qt import *
 from aqt.editor import Editor
 from anki.hooks import addHook
 from aqt.browser import Browser
 from aqt.operations import CollectionOp
 import time
+
+# 自定义信息显示函数，使界面更加一致
+def showInfo(text, parent=None, title="LexiSage", textFormat="plain"):
+    parent = parent or mw
+
+    # 创建自定义信息对话框
+    msgBox = QMessageBox(parent)
+    msgBox.setWindowTitle(title)
+
+    if textFormat == "rich":
+        msgBox.setTextFormat(Qt.TextFormat.RichText)
+    else:
+        msgBox.setTextFormat(Qt.TextFormat.PlainText)
+
+    msgBox.setText(text)
+    msgBox.setIcon(QMessageBox.Icon.Information)
+    msgBox.addButton(QMessageBox.StandardButton.Ok)
+
+    # 显示对话框
+    msgBox.exec()
 
 from .config_ui import setup_config_ui
 from .ai_service import generate_explanation
@@ -117,8 +137,49 @@ def on_generate_explanation(editor):
     if context_field and context_field in note:
         context = note[context_field]
 
+    # 显示进度对话框
+    progress = QProgressDialog("正在生成释义...", "取消", 0, 100, editor.parentWindow)
+    progress.setWindowTitle("LexiSage - 生成释义")
+    progress.setMinimumWidth(300)
+    progress.setMinimumDuration(0)  # 立即显示，不等待
+    progress.setWindowModality(Qt.WindowModality.NonModal)  # 非模态，允许取消
+    progress.setAutoClose(True)
+    progress.setValue(10)  # 立即显示一些进度
+    progress.show()
+    QApplication.processEvents()  # 确保UI响应
+
+    # 更新进度
+    progress.setValue(20)
+    progress.setLabelText(f"正在处理: '{word}'")
+    QApplication.processEvents()  # 确保UI响应
+
+    # 检查是否取消
+    if progress.wasCanceled():
+        progress.close()
+        return
+
     # 生成释义
-    explanation = generate_explanation(word, context, config)
+    try:
+        explanation = generate_explanation(word, context, config)
+        # 检查是否在API调用后取消
+        if progress.wasCanceled():
+            progress.close()
+            return
+    except Exception as e:
+        showInfo(f"生成释义时发生错误: {str(e)}", title="LexiSage - 错误")
+        progress.close()
+        return
+
+    # 更新进度
+    progress.setValue(80)
+    progress.setLabelText("正在更新笔记...")
+    QApplication.processEvents()  # 确保UI响应
+
+    # 最后检查一次是否取消
+    if progress.wasCanceled():
+        progress.close()
+        return
+
     if explanation:
         # 将纯文本换行转换为HTML换行标签
         explanation = explanation.replace("\n", "<br>")
@@ -126,9 +187,33 @@ def on_generate_explanation(editor):
         note[destination_field] = explanation
         note.flush()
         editor.loadNote()
-        showInfo("释义生成成功")
+
+        # 完成
+        progress.setValue(100)
+        progress.setLabelText("完成!")
+        QApplication.processEvents()
+
+        # 最后一次检查取消状态
+        if progress.wasCanceled():
+            progress.close()
+            return
+
+        # 显示结果
+        result_msg = f"""<h3>释义生成成功</h3>
+<p>已更新字段: <b>{destination_field}</b></p>"""
+        showInfo(result_msg, title="LexiSage - 生成释义", textFormat="rich")
     else:
-        showInfo("释义生成失败，请检查配置和网络连接")
+        # 完成但有错误
+        progress.setValue(100)
+        progress.setLabelText("生成失败")
+        QApplication.processEvents()
+
+        # 即使失败也检查取消状态
+        if progress.wasCanceled():
+            progress.close()
+            return
+
+        showInfo("释义生成失败，请检查配置和网络连接", title="LexiSage - 错误")
 
 # 为浏览器添加顶级菜单
 def setup_browser_menu(browser):
@@ -227,16 +312,32 @@ def on_browser_generate_explanation(browser):
     if not askUser(f"确定要为选中的{len(selected_notes)}条笔记生成释义吗？"):
         return
 
-    # 处理进度对话框
-    progress = QProgressDialog("正在生成释义...", "取消", 0, len(selected_notes), browser)
-    progress.setWindowModality(Qt.WindowModality.WindowModal)
+    # 创建一个更好的进度对话框
+    progress = QProgressDialog(browser)
+    progress.setWindowTitle("LexiSage - 生成释义")
+    progress.setLabelText("准备中...")
+    progress.setCancelButtonText("取消")
+    progress.setMinimumWidth(350)
+    progress.setMinimumDuration(0)  # 立即显示，不等待
+    # 使用非模态对话框，这样取消按钮可以响应
+    progress.setWindowModality(Qt.WindowModality.NonModal)
+    progress.setMinimum(0)
+    progress.setMaximum(len(selected_notes))
+    progress.setAutoClose(False)
+    progress.setValue(0)
     progress.show()
+
+    # 增加刷新UI的频率
+    QApplication.processEvents()
 
     # 计数器
     success_count = 0
     error_count = 0
     note_type_mismatch = 0
     empty_field = 0
+
+    # 添加标志跟踪是否真正被用户取消
+    was_canceled = False
 
     # 获取笔记类型配置
     note_type_configs = config.get("noteTypeConfigs", {})
@@ -251,13 +352,22 @@ def on_browser_generate_explanation(browser):
         }
 
     try:
+        total_notes = len(selected_notes)
+
         for i, nid in enumerate(selected_notes):
             if progress.wasCanceled():
+                was_canceled = True
                 break
 
-            note = mw.col.get_note(nid)
+            # 更新进度显示
+            current = i + 1
             progress.setValue(i)
-            progress.setLabelText(f"正在处理 {i+1}/{len(selected_notes)}")
+            progress.setLabelText(f"正在处理 {current}/{total_notes} ({(current / total_notes * 100):.1f}%)")
+
+            # 确保UI响应
+            mw.app.processEvents()
+
+            note = mw.col.get_note(nid)
 
             # 获取笔记类型
             note_type_name = note.note_type()["name"]
@@ -290,8 +400,28 @@ def on_browser_generate_explanation(browser):
             if context_field and context_field in note:
                 context = note[context_field]
 
+            # 更新进度显示为当前处理的词语
+            progress.setLabelText(f"正在处理: '{word}' ({current}/{total_notes})")
+            QApplication.processEvents()  # 确保UI响应，显示当前处理的词语
+
+            # 再次检查取消状态
+            if progress.wasCanceled():
+                was_canceled = True
+                break
+
             # 生成释义
-            explanation = generate_explanation(word, context, config)
+            try:
+                explanation = generate_explanation(word, context, config)
+                # API调用后再次检查取消状态
+                if progress.wasCanceled():
+                    was_canceled = True
+                    break
+                QApplication.processEvents()  # 确保UI响应
+            except Exception as e:
+                # 处理API调用过程中可能出现的异常
+                error_count += 1
+                continue
+
             if explanation:
                 # 将纯文本换行转换为HTML换行标签
                 explanation = explanation.replace("\n", "<br>")
@@ -299,36 +429,95 @@ def on_browser_generate_explanation(browser):
                 note[destination_field] = explanation
                 note.flush()
                 success_count += 1
-                # 避免API请求过于频繁
-                time.sleep(0.5)
+                # 避免API请求过于频繁，但允许UI更新
+                for _ in range(5):  # 将0.5秒分成5段，每段之间处理事件
+                    time.sleep(0.1)
+                    QApplication.processEvents()
+                    # 检查取消状态
+                    if progress.wasCanceled():
+                        was_canceled = True
+                        break
             else:
                 error_count += 1
 
-            # 更新UI，避免冻结
-            mw.app.processEvents()
+            # 再次更新进度，确保UI响应
+            progress.setValue(current)
+            QApplication.processEvents()
+
+    except Exception as e:
+        # 捕获整个过程中的异常
+        showInfo(f"处理过程中发生错误: {str(e)}", title="LexiSage - 错误")
 
     finally:
-        progress.setValue(len(selected_notes))
+        # 完成所有处理后，确保进度条显示已完成
+        if not progress.wasCanceled():
+            progress.setValue(len(selected_notes))
+            progress.setLabelText("完成!")
+        QApplication.processEvents()
 
-    # 显示结果
+        # 关闭进度对话框
+        progress.close()
+
+    # 如果用户确实取消了操作，显示部分结果
+    if was_canceled:
+        showInfo("操作已取消", title="LexiSage - 已取消")
+        browser.model.reset()
+        return
+
+    # 显示结果，以更简洁、用户友好的方式呈现
+    total_processed = success_count + error_count + note_type_mismatch + empty_field
     result_msg = f"""
-处理结果:
-- 成功: {success_count}
-- 失败: {error_count}
-- 笔记类型未配置: {note_type_mismatch}
-- 源字段为空: {empty_field}
+<h3>处理完成</h3>
+<table cellpadding=6>
+  <tr>
+    <td><b>总处理:</b></td>
+    <td align="right">{total_processed}</td>
+  </tr>
+  <tr>
+    <td><b>成功:</b></td>
+    <td align="right">{success_count}</td>
+  </tr>
+  <tr>
+    <td><b>失败:</b></td>
+    <td align="right">{error_count}</td>
+  </tr>
+  <tr>
+    <td><b>笔记类型未配置:</b></td>
+    <td align="right">{note_type_mismatch}</td>
+  </tr>
+  <tr>
+    <td><b>源字段为空:</b></td>
+    <td align="right">{empty_field}</td>
+  </tr>
+</table>
 """
-    showInfo(result_msg)
+    showInfo(result_msg, title="LexiSage - 生成释义结果", textFormat="rich")
 
     # 刷新浏览器视图
     browser.model.reset()
 
 # 确认对话框
-def askUser(text, parent=None, defaultButton=QMessageBox.StandardButton.Yes):
+def askUser(text, parent=None, defaultButton=QMessageBox.StandardButton.Yes, title="LexiSage - 确认"):
     parent = parent or mw
-    return QMessageBox.question(parent, "LexiSage", text,
-                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                defaultButton) == QMessageBox.StandardButton.Yes
+
+    # 创建自定义确认对话框
+    msgBox = QMessageBox(parent)
+    msgBox.setWindowTitle(title)
+    msgBox.setText(text)
+    msgBox.setIcon(QMessageBox.Icon.Question)
+
+    # 添加按钮
+    yesButton = msgBox.addButton("确定", QMessageBox.ButtonRole.YesRole)
+    noButton = msgBox.addButton("取消", QMessageBox.ButtonRole.NoRole)
+
+    # 设置默认按钮
+    msgBox.setDefaultButton(yesButton if defaultButton == QMessageBox.StandardButton.Yes else noButton)
+
+    # 显示对话框
+    msgBox.exec()
+
+    # 返回结果
+    return msgBox.clickedButton() == yesButton
 
 # 初始化
 setup_tools_menu()  # 添加设置到工具菜单
