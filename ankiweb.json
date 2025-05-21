@@ -1,7 +1,7 @@
 {
     "display_name": "LexiSage - Anki智能释义插件",
     "module_name": "anki_lexisage",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "利用AI生成单词或短语的详细释义，支持多笔记类型配置，适合语言学习者。",
     "name_en": "LexiSage - AI Definition Generator",
     "description_en": "Generate detailed explanations for words or phrases using AI. Supports multiple note types and is ideal for language learners.",

@@ -1,7 +1,7 @@
 {
     "name": "LexiSage - Anki智能释义插件",
     "package": "anki_lexisage",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "homepage": "https://github.com/GeekyGuang/LexiSage",
     "conflicts": []
 }
