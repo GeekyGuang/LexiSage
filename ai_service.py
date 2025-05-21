@@ -108,15 +108,6 @@ def call_xai_api(prompt, config, system_prompt=None):
 
     # 检查并修正URL格式
     base_url = api_config['baseUrl']
-    if base_url and not base_url.endswith("/v1/chat/completions"):
-        # 如果URL不包含必要的路径，尝试修正
-        if not base_url.endswith("/"):
-            base_url += "/"
-        if not base_url.endswith("v1/"):
-            if "v1" not in base_url:
-                base_url += "v1/"
-        if not base_url.endswith("chat/completions"):
-            base_url += "chat/completions"
 
     while retry_count <= max_retries:
         try:
