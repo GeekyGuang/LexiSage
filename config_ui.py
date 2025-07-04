@@ -222,6 +222,43 @@ class ConfigDialog(QDialog):
         deepseek_layout.addRow("Model:", self.deepseek_model)
         self.service_stack.addWidget(deepseek_widget)
 
+        # 多线程配置区域
+        ai_layout.addSpacing(20)
+
+        # 添加分隔线
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setStyleSheet("background-color: #ddd;")
+        ai_layout.addWidget(separator)
+
+        multithreading_group = QGroupBox("多线程配置")
+        multithreading_layout = QFormLayout(multithreading_group)
+
+        # 启用多线程选项
+        self.enable_multithreading_checkbox = QCheckBox("启用多线程批量生成")
+        self.enable_multithreading_checkbox.setToolTip("启用后可以同时处理多个释义生成任务，提高效率")
+        multithreading_layout.addRow("", self.enable_multithreading_checkbox)
+
+        # 并发数量配置
+        concurrent_layout = QHBoxLayout()
+        self.max_concurrent_spinbox = QSpinBox()
+        self.max_concurrent_spinbox.setRange(1, 10)
+        self.max_concurrent_spinbox.setValue(3)
+        self.max_concurrent_spinbox.setToolTip("同时进行的最大请求数量\n建议值：3-5（过多可能导致API限制）")
+        concurrent_layout.addWidget(self.max_concurrent_spinbox)
+        concurrent_layout.addWidget(QLabel("个并发请求"))
+        concurrent_layout.addStretch()
+        multithreading_layout.addRow("并发数量:", concurrent_layout)
+
+        # 多线程说明
+        multithreading_info = QLabel("• 多线程可以显著提高批量生成的速度\n• 建议并发数量为3-5个，过多可能触发API限制\n• 对于单个释义生成，多线程不会产生效果")
+        multithreading_info.setStyleSheet("color: #666; font-size: 11px;")
+        multithreading_info.setWordWrap(True)
+        multithreading_layout.addRow(multithreading_info)
+
+        ai_layout.addWidget(multithreading_group)
+
         # 自定义提示词选项卡（移到最右边）
         prompts_tab = QWidget()
         prompts_layout = QVBoxLayout(prompts_tab)
@@ -502,6 +539,10 @@ class ConfigDialog(QDialog):
         self.deepseek_apikey.setText(deepseek_config.get("apiKey", ""))
         self.deepseek_model.setText(deepseek_config.get("model", "deepseek-chat"))
 
+        # 加载多线程配置
+        self.enable_multithreading_checkbox.setChecked(self.config.get("enableMultiThreading", True))
+        self.max_concurrent_spinbox.setValue(self.config.get("maxConcurrentRequests", 3))
+
     def save_config(self):
         ai_service_index = self.ai_service_combo.currentIndex()
         ai_service = ["openai", "xai", "deepseek"][ai_service_index]
@@ -550,6 +591,10 @@ class ConfigDialog(QDialog):
                 "model": self.deepseek_model.text()
             }
         }
+
+        # 保存多线程配置
+        self.config["enableMultiThreading"] = self.enable_multithreading_checkbox.isChecked()
+        self.config["maxConcurrentRequests"] = self.max_concurrent_spinbox.value()
 
         # 保存配置，使用实际的插件ID而非硬编码值
         mw.addonManager.writeConfig(self.addon_name, self.config)

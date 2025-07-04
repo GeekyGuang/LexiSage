@@ -34,7 +34,7 @@ def showInfo(text, parent=None, title="LexiSage", textFormat="plain"):
     msgBox.exec()
 
 from .config_ui import setup_config_ui
-from .ai_service import generate_explanation
+from .ai_service import generate_explanation, generate_explanations_batch, ExplanationTask
 
 # 初始化配置
 def load_config():
@@ -64,7 +64,9 @@ def load_config():
                     "model": ""
                 }
             },
-            "systemPrompt": "你是一位专业的语言学家和教育者，负责解释词语含义。请提供准确、清晰、易懂的解释，适合语言学习者。"
+            "systemPrompt": "你是一位专业的语言学家和教育者，负责解释词语含义。请提供准确、清晰、易懂的解释，适合语言学习者。",
+            "maxConcurrentRequests": 3,
+            "enableMultiThreading": True
         }
         mw.addonManager.writeConfig(__name__, config)
     return config
@@ -332,10 +334,19 @@ def on_browser_generate_explanation(browser):
         return
 
     # 确认操作
-    if not askUser(f"确定要为选中的{len(selected_notes)}条笔记生成释义吗？"):
+    enable_multithreading = config.get("enableMultiThreading", True)
+    max_concurrent = config.get("maxConcurrentRequests", 3)
+
+    multithreading_status = "启用" if enable_multithreading else "禁用"
+    confirm_msg = f"""确定要为选中的{len(selected_notes)}条笔记生成释义吗？
+
+多线程: {multithreading_status}
+{f'并发数: {max_concurrent}' if enable_multithreading else ''}"""
+
+    if not askUser(confirm_msg):
         return
 
-        # 创建一个更好的进度对话框 - 以特定方式避免Windows上弹出主界面
+    # 创建一个更好的进度对话框 - 以特定方式避免Windows上弹出主界面
     browser_window = browser
     if hasattr(browser, 'window'):
         browser_window = browser.window()
@@ -390,20 +401,15 @@ def on_browser_generate_explanation(browser):
         }
 
     try:
+        # 准备任务列表
+        tasks = []
         total_notes = len(selected_notes)
 
-        for i, nid in enumerate(selected_notes):
+        # 预处理所有笔记，创建任务列表
+        for nid in selected_notes:
             if progress.wasCanceled():
                 was_canceled = True
                 break
-
-            # 更新进度显示
-            current = i + 1
-            progress.setValue(i)
-            progress.setLabelText(f"正在处理 {current}/{total_notes} ({(current / total_notes * 100):.1f}%)")
-
-            # 确保UI响应
-            safe_process_events()
 
             note = mw.col.get_note(nid)
 
@@ -423,7 +429,6 @@ def on_browser_generate_explanation(browser):
 
             # 检查字段配置
             if not field_to_explain or not destination_field:
-                showInfo(f"笔记类型 '{note_type_name}' 的配置不完整")
                 error_count += 1
                 continue
 
@@ -438,49 +443,85 @@ def on_browser_generate_explanation(browser):
             if context_field and context_field in note:
                 context = note[context_field]
 
-            # 更新进度显示为当前处理的词语
-            progress.setLabelText(f"正在处理: '{word}' ({current}/{total_notes})")
-            safe_process_events()  # 确保UI响应，显示当前处理的词语
+            # 创建任务对象
+            task = ExplanationTask(nid, word, context, config, note_type_config)
+            tasks.append(task)
 
-            # 再次检查取消状态
+        if was_canceled:
+            progress.close()
+            showInfo("操作已取消", title="LexiSage - 已取消")
+            return
+
+        # 更新进度条范围
+        progress.setRange(0, len(tasks))
+        progress.setValue(0)
+        progress.setLabelText(f"开始处理 {len(tasks)} 个任务...")
+        safe_process_events()
+
+        # 进度回调函数
+        def progress_callback(completed, total, current_word):
             if progress.wasCanceled():
-                was_canceled = True
-                break
+                return
+            progress.setValue(completed)
+            if current_word:
+                progress.setLabelText(f"正在处理: '{current_word}' ({completed}/{total})")
+            safe_process_events()
 
-            # 生成释义
-            try:
-                explanation = generate_explanation(word, context, config)
-                # API调用后再次检查取消状态
+        # 根据配置选择处理方式
+        if enable_multithreading and len(tasks) > 1:
+            # 使用多线程处理
+            completed_tasks = generate_explanations_batch(
+                tasks,
+                max_workers=max_concurrent,
+                progress_callback=progress_callback
+            )
+        else:
+            # 使用单线程处理（保留原有逻辑）
+            completed_tasks = []
+            for i, task in enumerate(tasks):
                 if progress.wasCanceled():
                     was_canceled = True
                     break
-                safe_process_events()  # 确保UI响应
-            except Exception as e:
-                # 处理API调用过程中可能出现的异常
-                error_count += 1
-                continue
 
-            if explanation:
-                # 将纯文本换行转换为HTML换行标签
-                explanation = explanation.replace("\n", "<br>")
-                # 更新目标字段
-                note[destination_field] = explanation
-                note.flush()
-                success_count += 1
-                # 避免API请求过于频繁，但允许UI更新
-                for _ in range(5):  # 将0.5秒分成5段，每段之间处理事件
-                    time.sleep(0.1)
-                    safe_process_events()
-                    # 检查取消状态
-                    if progress.wasCanceled():
-                        was_canceled = True
-                        break
-            else:
-                error_count += 1
+                progress.setValue(i)
+                progress.setLabelText(f"正在处理: '{task.word}' ({i+1}/{len(tasks)})")
+                safe_process_events()
 
-            # 再次更新进度，确保UI响应
-            progress.setValue(current)
+                try:
+                    explanation = generate_explanation(task.word, task.context, config)
+                    if explanation:
+                        task.result = explanation.replace("\n", "<br>")
+                        task.success = True
+                    else:
+                        task.error = "API调用失败"
+                        task.success = False
+                except Exception as e:
+                    task.error = str(e)
+                    task.success = False
+
+                completed_tasks.append(task)
+
+                # 短暂延迟，避免API请求过于频繁
+                time.sleep(0.1)
+                safe_process_events()
+
+        # 如果用户在处理过程中取消了操作
+        if progress.wasCanceled():
+            was_canceled = True
+
+        # 更新笔记数据
+        if not was_canceled:
+            progress.setLabelText("保存结果...")
             safe_process_events()
+
+            for task in completed_tasks:
+                if task.success and task.result:
+                    note = mw.col.get_note(task.note_id)
+                    note[task.note_type_config["destinationField"]] = task.result
+                    note.flush()
+                    success_count += 1
+                else:
+                    error_count += 1
 
     except Exception as e:
         # 捕获整个过程中的异常
