@@ -1,74 +1,162 @@
 # LexiSage - Anki智能释义插件
 
-[English](README_EN.md) | 中文
+[English](README_EN.md) | [中文](README.md)
 
-> LexiSage – Let your cards speak with clarity and wisdom.
+> LexiSage – 让你的卡片清晰而智慧地表达
 
-## 项目简介
-[LexiSage](https://ankiweb.net/shared/info/750479332?cb=1744698675805)是一款为Anki设计的智能释义插件，支持调用多种AI接口（OpenAI、XAI、DeepSeek）对选定字段进行解释，特别适合语言学习者。
+## 📖 项目简介
 
-### 主要功能
-- 自动解析词语含义和用法
-- 支持根据上下文解释单词
-- 批量处理功能，提高学习效率
-- 支持多种AI服务，需自备 API Key
+[LexiSage](https://ankiweb.net/shared/info/750479332?cb=1744698675805) 是一款为 Anki 设计的智能释义插件，支持调用多种 AI 接口（OpenAI、XAI、DeepSeek）对选定字段进行解释，特别适合语言学习者。
 
-## 安装说明
+### ✨ 主要功能
 
-1. 在Anki中，点击"工具">"插件"
-2. 点击"获取插件"
+- **自动解析词语含义和用法**：AI 智能分析单词/短语的核心含义
+- **上下文感知解释**：根据例句上下文提供精准释义
+- **高效批量处理**：一次处理多张卡片字段，提升学习效率
+- **多 AI 服务支持**：支持 OpenAI、XAI、DeepSeek（需自备 API Key）
+- **多字段独立配置**：每个目标字段可设置专属 AI 指令
+
+## 📦 安装说明
+
+### 简单安装步骤
+
+1. 在 Anki 中，点击顶部菜单栏的 **工具** → **插件**
+2. 点击 **获取插件...** 按钮
 3. 输入插件代码：**750479332**
-4. 重启Anki
+4. 点击 **确定** 并重启 Anki
 
-## 使用说明
+---
 
-### 基本配置
+## 🚀 快速开始指南
 
-1. 打开Anki，在"工具"菜单中选择"LexiSage 设置..."
-2. 设置 AI 服务。
+### 第一步：AI 服务配置（首次使用必做）
 
-   插件本身不提供 AI 服务，需要用户自行购买 AI 服务商的 API Key 填入插件中，在获得 API Key 之后，选择对应的服务商，填写正确的 API Key 和要使用的模型。
+#### 1. 打开设置界面
+- 在 Anki 主界面，点击顶部菜单栏的 **工具 (Tools)** → **LexiSage 设置...**
 
-   AI 服务商推荐
-   - [DeepSeek](https://platform.deepseek.com)(国产 AI 之光)
-   - [xAI](https://console.x.ai)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/1b28afbc-3d03-47b4-9c09-c3401b5d64bb" alt="LexiSage 设置入口" width="600"/>
+</p>
 
-   ![image](https://github.com/user-attachments/assets/372d2766-49de-48fd-8333-0acd741fa6ab)
+#### 2. 配置 AI 服务
+- 点击顶部的 **3. AI 服务设置** 标签页
+- 选择你的服务商：
+  - [OpenAI](https://platform.openai.com/)（国际主流）
+  - [DeepSeek](https://platform.deepseek.com)（国产 AI 之光）
+  - [xAI](https://console.x.ai)（Grok 模型）
 
-3. 为你的笔记类型添加配置，指定模板中要 AI 解释的字段，指定存放输出结果的字段，还可以为单词指定上下文，根据上下文来释义。
+#### 3. 填写 API 信息
+- **Base URL**：通常使用默认值即可
+- **API Key**：输入你的服务商 API 密钥（仅保存在本地）
+- **模型选择**：根据需要选择合适的模型
+- **高级设置**：可开启“多线程并发”加速批量生成
 
-   ![image](https://github.com/user-attachments/assets/cb48ee74-3e36-4fc1-9ff9-14af6d3c5179)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/60a69b10-8a52-47d2-92bb-ae173efd329d" alt="AI 服务设置界面" width="600"/>
+</p>
 
-   - 点 + 号添加笔记类型配置
-   - 选择笔记类型
-   - 选择要解释的字段
-   - 选择上下文字段（可选）
-   - 选择释义目标字段
-   - 保存配置
-   （本插件支持配置多个笔记类型，在批量生成释义时即使选择了不同类型的笔记也能一并处理）
+#### 4. 保存配置
+- 点击底部的 **保存配置** 按钮
 
-### 释义生成
+> ⚠️ **重要提示**：插件本身不提供 AI 服务，需要用户自行购买 AI 服务商的 API Key。请确保选择正确的服务商并填写有效的 API Key。
 
-1. 浏览牌组
-2. 选择要生成释义的卡片
-3. 点击菜单栏"LexiSage"-"批量生成释义"，等待完成
+---
 
-   ![image](https://github.com/user-attachments/assets/6ebbb32e-e9a9-4f84-96d1-cc05041e3b8c)
+### 第二步：笔记类型与字段映射配置（核心功能）
 
-### 自定义 Prompt
+#### 1. 添加笔记类型
+- 切换到 **1. 笔记类型设置** 标签页
+- 在左侧下拉框中找到你的卡片模板（如 `LexiSage Master` 或 `Basic`）
+- 点击 **↓ 添加到配置列表** 按钮
 
-本插件内置了 Prompt，如果你对释义的结果不满意，可以在"LexiSage 设置"中自定义提示词
+#### 2. 配置源字段
+- 在右侧面板中，选择 **来源单词字段**（告诉 AI 要解释哪个词，如 `Word`）
+- （推荐）选择 **来源上下文字段**（如 `Context`），让 AI 根据例句精准释义
 
-## 开发者指南
+#### 3. 配置目标字段（多字段映射）
+- 在“释义目标字段与提示词”区域：
+  - 下拉选择要填充的字段（如 `Meaning`）
+  - 点击 **+** 按钮添加字段
+  - 在文本框中输入专属提示词（留空则使用默认提示词）
+- 重复以上步骤，添加所有需要 AI 填充的字段
 
-如果你想了解项目结构，构建流程，或者想要参与贡献，请查看我们的[开发者文档](DEVELOPMENT.md)。
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/a56f25d2-571f-4e76-80bd-6a386332dcba" alt="字段映射配置" width="600"/>
+</p>
 
-## 许可证
-本项目采用 [GNU通用公共许可证v3.0(GPL-3.0)](LICENSE) - 详情请参阅LICENSE文件。
+#### 4. 预览与验证
+- 返回 **3. AI 服务设置** 标签页
+- 先点击 **保存配置**
+- 再点击 **🔍 预览完整发送内容**，确认 AI 接收的指令符合预期
 
-## 致谢
-- 感谢所有贡献者和用户
-- 特别感谢Anki开发团队提供的优秀平台
+---
 
-## 隐私说明
-此插件会将您的卡片内容发送到您配置的AI服务，请确保您了解相关隐私政策。API密钥仅存储在本地配置文件中，不会被上传。
+### 第三步：批量生成释义（日常使用）
+
+#### 1. 选择卡片
+- 打开 Anki 的 **浏览 (Browser)** 界面
+- 选中要处理的卡片（支持多选）
+
+#### 2. 触发生成
+- 点击顶部菜单栏 **LexiSage** → **批量生成释义**
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/fb44c4c6-d234-4af8-a9f5-49b9f799c272" alt="批量生成菜单" width="600"/>
+</p>
+
+#### 3. 选择处理模式
+- **更新 (Update) 模式**：只填充空字段，绝对安全，不会覆盖手动内容
+- **覆盖 (Overwrite) 模式**：强制重写所有选中字段，适用于重修卡片
+
+#### 4. 等待完成
+- 进度条显示处理进度
+- 完成后显示消耗的 Token 数量和成功统计
+
+---
+
+### 第四步：单卡即时生成（边学边改）
+
+#### 1. 打开编辑界面
+- 在添加新卡片或编辑现有卡片时使用
+
+#### 2. 点击生成按钮
+- 在编辑器工具栏上点击 **LexiSage** 按钮
+
+#### 3. 自动填充
+- 插件根据配置规则自动填充所有空缺字段
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/353e38be-8bf2-423c-a09b-1648a26e2673" alt="单卡生成按钮" width="600"/>
+</p>
+
+---
+
+## 👨‍💻 开发者指南
+
+如果你想了解项目结构、构建流程，或想要参与贡献，请查看我们的[开发者文档](DEVELOPMENT.md)。
+
+## 📄 许可证
+
+本项目采用 [GNU 通用公共许可证 v3.0 (GPL-3.0)](LICENSE) - 详情请参阅 LICENSE 文件。
+
+## 📝 更新日志
+
+最新更新内容可通过[更新日志](CHANGELOG.md)查看。
+
+## 🙏 致谢
+
+- **感谢所有贡献者和用户**的支持与反馈
+- **特别感谢 Anki 开发团队**提供的优秀平台
+- 感谢社区成员的宝贵建议和 bug 报告
+
+## 🔒 隐私说明
+
+- 此插件会将您的卡片内容发送到您配置的 AI 服务
+- 请确保您了解所选 AI 服务商的隐私政策
+- API 密钥仅存储在本地配置文件中，不会被上传到任何服务器
+
+---
+
+<p align="center">
+  <sub>最后更新：2026年1月 | 让学习更智能，让记忆更高效</sub>
+</p>
